@@ -36,4 +36,13 @@ export class ElectronService {
       this.remote = window.require('@electron/remote');
     }
   }
+
+  async getFiles() {
+    return new Promise<string[]>((resolve, reject) => {
+      this.ipcRenderer.once("getFilesResponse", (event, arg) => {
+        resolve(arg);
+      });
+      this.ipcRenderer.send("getFiles");
+    });
+  }
 }
