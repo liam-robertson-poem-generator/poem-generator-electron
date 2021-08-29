@@ -12,6 +12,12 @@
 [![Star on GitHub][github-star-badge]][github-star]
 [![Tweet][twitter-badge]][twitter]
 
+# Liam's Notes
+Most of this is a boilerplate taken from here - https://github.com/liam-robertson-utils/angular-electron-boilerplate
+However I also added some functionality which lets you import fs and read in a directory with all of its files
+This is a relatively minor change but it's a pain to do so this boilerplate is definitely worth having 
+Will need to be updated sometimes though
+
 # Introduction
 
 Bootstrap and package your project with Angular 12 and Electron 13 (Typescript + SASS + Hot Reload) for creating Desktop applications.

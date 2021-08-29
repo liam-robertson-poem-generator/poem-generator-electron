@@ -33,13 +33,4 @@ export class HomeComponent implements OnInit {
     return this.options.filter(option => option.toLowerCase().indexOf(filterValue) === 0);
   }
 
-  // inputPoemList = readdirSync('./syllabaryPoems');
-  // inputPoemList = inputPoemList.reduce(function (filtered: any[], currentElement: string) {
-  //     if (currentElement.slice(-5) === '.json') {
-  //         currentElement = currentElement.slice(0, -5);
-  //         filtered.push(currentElement);
-  //     }
-  //     return filtered
-  // }, []);
-
 }
