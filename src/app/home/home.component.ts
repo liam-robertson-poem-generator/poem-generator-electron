@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import {FormControl} from '@angular/forms';
-import {Observable} from 'rxjs';
-import {map, startWith} from 'rxjs/operators';
+import { FormControl } from '@angular/forms';
+import { Observable } from 'rxjs';
 import { ElectronService } from "../core/services/electron/electron.service";
+import { map, startWith } from 'rxjs/operators';
 
 @Component({
   selector: 'app-home',
@@ -12,8 +12,8 @@ import { ElectronService } from "../core/services/electron/electron.service";
 })
 export class HomeComponent implements OnInit {
   myControl = new FormControl();
-  options: string[] = ['Delhi', 'Mumbai', 'Banglore'];
-  filteredOptions: Observable<string[]> | undefined;
+  options: string[] = ['One', 'Two', 'Three'];
+  filteredOptions: Observable<string[]>;
   private poemListRaw;
 
   constructor(private router: Router, private electronService: ElectronService) {  
@@ -30,8 +30,17 @@ export class HomeComponent implements OnInit {
       console.log(this.poemListRaw);
     })();
     
-    // Write rest of on initialisation code here
-    // Has to be inside of this async function to be able to access get files variable   
+    this.filteredOptions = this.myControl.valueChanges
+      .pipe(
+        startWith(''),
+        map(value => this._filter(value))
+      );
+  }
+
+  private _filter(value: string): string[] {
+    const filterValue = value.toLowerCase();
+
+    return this.options.filter(option => option.toLowerCase().includes(filterValue));
 
   }
 
