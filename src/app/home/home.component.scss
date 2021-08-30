@@ -23,19 +23,38 @@
         padding: 0.2em 0em;
         font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
     }
+      
+    .example-button-row {
+        width: 100%;
+      }
 
-    .example-form {
-        min-width: 150px;
-        max-width: 500px;
+    button {
+        margin: 0.5em auto 0 auto;
+        border: 0.1em solid rgb(189, 189, 189);
+        border-radius: 0.2em;
+        padding: 0.5em 1em;
+        font-size: 1em;
+        width: 30%;
+    }
+
+    .example-container {
         width: 100%;
         margin: auto;
       }
-      
-      .example-full-width {
-        width: 100%;
+
+    .example-dropdown {
+    width: 100%;
+    margin: auto;
+    }
+
+    .example-form {
+        margin: auto;
       }
+      
+    .example-full-width {
+    width: 100%;
+    }
      
-    
     .main-container {
         justify-content: center;
         display: flex;
@@ -89,57 +108,6 @@
         outline: none;
         font-size: 0.7em;
     }
-    
-    .entry-container button {
-        margin: 0.5em auto 0 auto;
-        border: 0.1em solid rgb(189, 189, 189);
-        border-radius: 0.2em;
-        padding: 0.3em 1em;
-        font-size: 0.7em;
-    }
-    
-    .entry-container input:hover {
-        box-shadow: 0px 0px 5px 2px rgba(110, 110, 110, 0.24);
-    }
-    
-    .radio-container {
-        margin-top: 0.5em;
-        background: linear-gradient(80deg, rgba(226, 255, 252, 0.144) 40%, rgba(248, 253, 253, 0.123)); 
-        box-shadow: inset 0px 0px 2px 2px rgba(61, 76, 143, 0.158);
-        border: 0.08em solid rgb(189, 189, 189);
-        border-radius: 1em;
-        padding: 0.5em 0.5em;
-    }
-    
-    .radio-subcontainer label {
-        padding: 0.5em 0em;
-        font-size: 0.8em;
-        margin: 0 0.5em;
-    }
-    
-    #submitLabel button {
-        display: block;
-        margin: 1.2em auto 0.5em auto;
-        border: 0.08em solid rgb(146, 146, 146);
-        border-radius: 0.5em;
-        padding: 0.4em 1em;
-        font-size: 1em;
-        width: 80%;
-    }
-    
-    button:hover {
-        background-color: rgb(248, 248, 248);
-        box-shadow: 0px 2px 5px 1px rgba(61, 76, 143, 0.274);
-    }
-    
-    .errorMessage {
-        display: block;
-        white-space: pre-line;
-        margin: 0.5em 0 0 0;
-        font-size: 0.5em;
-        color: red;
-    }
-    
-  
+ 
 }
 

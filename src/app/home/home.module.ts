@@ -4,8 +4,11 @@ import { HomeComponent } from './home.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ReactiveFormsModule, FormsModule  } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import {MatButtonModule} from '@angular/material/button';
 
 @NgModule({
   declarations: [HomeComponent],
@@ -13,10 +16,13 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
     BrowserModule,
     BrowserAnimationsModule,
     MatInputModule,
+    MatRadioModule,
+    MatButtonModule,
     MatFormFieldModule,    
     MatAutocompleteModule,
     FormsModule, 
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatSelectModule
   ],
   providers: [],
   bootstrap: [HomeComponent]

@@ -1,63 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script defer src='../js/index.js'></script> -->
     <title>Syllabary Poem Generator</title>
 </head>
 <body>
     <div class='main-container'>
         <h1>Syllabary Poem Generator</h1>
         <div class='content-container'>
-            <div class='entry-container' id='numOfPoemsContainer'>
-                <label for="numOfPoems">How many poems do you want to generate?</label>
-                <input type="text" id='numOfPoems'>
-                <div id="numPoemsError" class='errorMessage'></div>
-            </div>
             <form class="example-form">
-              <mat-form-field class="example-full-width" appearance="fill">
-                <mat-label>What poem do you want to select?</mat-label>
-                <input type="text"
-                       placeholder="Pick one"
-                       aria-label="Number"
-                       matInput
-                       [formControl]="myControl"
-                       [matAutocomplete]="auto">
-                <mat-autocomplete #auto="matAutocomplete">
-                  <mat-option *ngFor="let option of filteredOptions | async" [value]="option">
-                    {{option}}
-                  </mat-option>
-                </mat-autocomplete>
-              </mat-form-field>
+                <mat-form-field class="example-full-width" appearance="fill">
+                    <mat-label>How many poems do you want to generate?</mat-label>
+                    <input matInput placeholder="pat@example.com" [formControl]="email" required>
+                    <mat-error *ngIf="email.invalid">{{getErrorMessage()}}</mat-error>
+                </mat-form-field>
+                <mat-form-field class="example-dropdown" appearance="fill">
+                    <mat-label>What poem do you want to select?</mat-label>
+                    <input type="text"
+                        placeholder="Pick one"
+                        aria-label="Number"
+                        matInput
+                        [formControl]="myControl"
+                        [matAutocomplete]="auto" required>
+                    <mat-autocomplete #auto="matAutocomplete">
+                    <mat-option *ngFor="let option of filteredOptions | async" [value]="option">
+                        {{option}}
+                    </mat-option>
+                    </mat-autocomplete>
+                </mat-form-field>
+                <mat-form-field class="example-dropdown" appearance="fill">
+                    <mat-label>Favorite food</mat-label>
+                    <mat-select>
+                      <mat-option *ngFor="let food of foods" [value]="food.value">
+                        {{food.viewValue}}
+                      </mat-option>
+                    </mat-select>
+                </mat-form-field>
             </form>
-            <!-- <div class='entry-container' id='startingPeom'>
-                <label for="startingPoem">What poem do you want to select?</label>
-                <input type="text" id='startingPoem'>
-                <p>Enter poem in format x-x-x (For example: 2-10-15)</p>
-                <button id='viewListBtn'>View Poem List</button>
-                <div id="startingPoemError" class='errorMessage'></div>
-            </div> -->
-            <div class='radio-container'>
-                <label for="orderForwards">Do you want the output poem list to start or end with the selected poem?</label>
-                <div class='radio-subcontainer'>
-                    <label class="radio">
-                        <span class="radio__input">
-                            <input type="radio" name="poemOrderRadio" id="poemOrder" value='Starting' checked='checked'/>
-                            <span class="radio__control"></span>
-                        </span>
-                        <span class="radio__label">Start</span>
-                    </label>
-                    <label class="radio">
-                        <span class="radio__input">
-                            <input type="radio" name="poemOrderRadio" id="poemOrder" value='Ending'/>
-                            <span class="radio__control"></span>
-                        </span>
-                        <span class="radio__label">End</span>
-                    </label>
-                </div>
-                <div id="poemOrderError" class='errorMessage'></div>
-            </div>
-            <div id='submitLabel'>
-                <button id='submitBtn'>Submit</button>
+            <div class="example-button-row">
+                <button mat-raised-button>Submit</button>
             </div>
         </div>
     </div>

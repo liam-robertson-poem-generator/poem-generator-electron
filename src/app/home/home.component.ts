@@ -1,9 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormControl } from '@angular/forms';
+import { FormControl, Validators, FormBuilder, FormGroup } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { ElectronService } from "../core/services/electron/electron.service";
 import { map, startWith } from 'rxjs/operators';
+
+interface Food {
+  value: string;
+  viewValue: string;
+}
 
 @Component({
   selector: 'app-home',
@@ -12,12 +17,16 @@ import { map, startWith } from 'rxjs/operators';
 })
 export class HomeComponent implements OnInit {
   myControl = new FormControl();
-  // options: string[] = ['One', 'Two', 'Three', 'One', 'Two', 'Three', 'One', 'Two', 'Three', 'One', 'Two', 'Three'];
   public optionsInt: number[][];
   public options: string[];
   filteredOptions: Observable<string[]>;
   public poemListRaw: any[];
   public poemList: number[][];
+  foods: Food[] = [
+    {value: 'steak-0', viewValue: 'Steak'},
+    {value: 'pizza-1', viewValue: 'Pizza'},
+    {value: 'tacos-2', viewValue: 'Tacos'}
+  ];
 
   constructor(private router: Router, private electronService: ElectronService) {  
   }
@@ -44,6 +53,16 @@ export class HomeComponent implements OnInit {
     
     
 
+  }
+
+  email = new FormControl('', [Validators.required, Validators.email]);
+
+  getErrorMessage() {
+    if (this.email.hasError('required')) {
+      return 'You must enter a value';
+    }
+
+    return this.email.hasError('email') ? 'Not a valid email' : '';
   }
 
   public sortByMultipleValues(inputList: number[][]) {
