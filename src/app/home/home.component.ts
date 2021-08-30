@@ -31,7 +31,7 @@ export class HomeComponent implements OnInit {
     })();
     
     // Write rest of on initialisation code here
-    // Has to be inside of this async function to be able to access get files variable 
+    // Has to be inside of this async function to be able to access get files variable   
 
   }
 
