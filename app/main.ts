@@ -93,6 +93,6 @@ try {
 }
 
 ipcMain.on("getFiles", (event, arg) => {
-  const files = fs.readdirSync(__dirname);
+  const files = fs.readdirSync(path.resolve(__dirname, "../src/assets/syllabaryPoems"));
   win.webContents.send("getFilesResponse", files);
 });
