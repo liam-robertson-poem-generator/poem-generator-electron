@@ -14,23 +14,26 @@ export class HomeComponent implements OnInit {
   myControl = new FormControl();
   options: string[] = ['Delhi', 'Mumbai', 'Banglore'];
   filteredOptions: Observable<string[]> | undefined;
+  private poemListRaw;
 
-  constructor(private router: Router, private electronService: ElectronService) {
-    this.electronService.getFiles().then(console.log);
+  constructor(private router: Router, private electronService: ElectronService) {  
   }
 
   ngOnInit(): void {
-    console.log('HomeComponent INIT');
-    this.filteredOptions = this.myControl.valueChanges.pipe(
-      startWith(''),
-      map(value => this._filter(value))
-    );
+    var asyncPoemList = (async () => {
+      var poemListRaw = await this.electronService.getFiles();
+      return poemListRaw;
+    })();
+  
+    (async () => {
+      this.poemListRaw = await asyncPoemList
+      console.log(this.poemListRaw);
+    })();
+    
+    // Write rest of on initialisation code here
+    // Has to be inside of this async function to be able to access get files variable 
+
   }
 
-  private _filter(value: string): string[] {
-    const filterValue = value.toLowerCase();
-
-    return this.options.filter(option => option.toLowerCase().indexOf(filterValue) === 0);
-  }
 
 }
