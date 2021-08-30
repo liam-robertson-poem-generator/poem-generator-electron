@@ -13,13 +13,29 @@
                 <input type="text" id='numOfPoems'>
                 <div id="numPoemsError" class='errorMessage'></div>
             </div>
-            <div class='entry-container' id='startingPeom'>
+            <form class="example-form">
+              <mat-form-field class="example-full-width" appearance="fill">
+                <mat-label>What poem do you want to select?</mat-label>
+                <input type="text"
+                       placeholder="Pick one"
+                       aria-label="Number"
+                       matInput
+                       [formControl]="myControl"
+                       [matAutocomplete]="auto">
+                <mat-autocomplete #auto="matAutocomplete">
+                  <mat-option *ngFor="let option of filteredOptions | async" [value]="option">
+                    {{option}}
+                  </mat-option>
+                </mat-autocomplete>
+              </mat-form-field>
+            </form>
+            <!-- <div class='entry-container' id='startingPeom'>
                 <label for="startingPoem">What poem do you want to select?</label>
                 <input type="text" id='startingPoem'>
                 <p>Enter poem in format x-x-x (For example: 2-10-15)</p>
                 <button id='viewListBtn'>View Poem List</button>
                 <div id="startingPoemError" class='errorMessage'></div>
-            </div>
+            </div> -->
             <div class='radio-container'>
                 <label for="orderForwards">Do you want the output poem list to start or end with the selected poem?</label>
                 <div class='radio-subcontainer'>

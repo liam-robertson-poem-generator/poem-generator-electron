@@ -23,6 +23,18 @@
         padding: 0.2em 0em;
         font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
     }
+
+    .example-form {
+        min-width: 150px;
+        max-width: 500px;
+        width: 100%;
+        margin: auto;
+      }
+      
+      .example-full-width {
+        width: 100%;
+      }
+     
     
     .main-container {
         justify-content: center;
@@ -52,7 +64,7 @@
         border: 0.08em solid rgb(189, 189, 189);
         border-radius: 1em;
         padding: 0.5em 0;
-    }
+    } 
     
     .entry-container label {
         padding: 0em;
