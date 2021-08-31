@@ -10,6 +10,7 @@ const Docxtemplater = require('docxtemplater');
 const util = require('util')
 import assign from "lodash/assign";
 import { readFileSync, writeFileSync } from 'fs';
+import { join, resolve } from 'path';
 
 interface Food {
   value: string;
@@ -61,77 +62,77 @@ export class HomeComponent implements OnInit {
 
   }
 
-//   public readWritePoems(inputList, startingPoemStr, numOfPoems, poemOrder) {
-//     // Initialising startup variables
-//     const xUniqueCoordList = this.sortedUniqueList(inputList, 0)
-//     const yUniqueCoordList = this.sortedUniqueList(inputList, 1)
-//     const zUniqueCoordList = this.sortedUniqueList(inputList, 2)
+  public readWritePoems(inputList: number[][], startingPoemStr: string, numOfPoems: number, poemOrder: number) {
+    // Initialising startup variables
+    const xUniqueCoordList: number[] = this.sortedUniqueList(inputList, 0)
+    const yUniqueCoordList: number[] = this.sortedUniqueList(inputList, 1)
+    const zUniqueCoordList: number[] = this.sortedUniqueList(inputList, 2)
+    let successCounter: number = 0;
+    let loopCounter: number = 0;
+    let indexCounter: number = 0;
+    let currentTargetElement: number[] = [1, 1, 1];
+    let currentCoord: number = 1;
+    let currentUniqueList: number[] = yUniqueCoordList;
 
-//     const startingPoem = startingPoemStr.split('-').map(coord => parseInt(coord));
-//     let successCounter = 0;
-//     let loopCounter = 0;
-//     let indexCounter = 0;
-//     let outputList = [];
-//     let targetElement = [[1], [1], [1]];
-//     let currentCoord = 1;
-//     let currentUniqueList = yUniqueCoordList;
-//     const docTemplate = readFileSync(path.resolve(__dirname, '../../assets/poetry-template.docx'), );
-//     const nextCoordDict = {0:1, 1:2, 2:0};
-//     const nextUniqueDict = {0:yUniqueCoordList, 1:zUniqueCoordList, 2:xUniqueCoordList}
+    const startingPoem: number[] = startingPoemStr.split('-').map((coord: string) => parseInt(coord));
+    const outputTemplateList: string[] = [];
+    const outputList: number[][] = [];
+    const docTemplate = readFileSync(resolve(__dirname, '../../assets/poetry-template.docx'), );
+    const nextCoordDict= {0:1, 1:2, 2:0};
+    const nextUniqueDict = {0:yUniqueCoordList, 1:zUniqueCoordList, 2:xUniqueCoordList}
 
-//     // Sorting input list (2d matrix) by two values. In this case X then Y
-//     let inputListSorted = this.sortByMultipleValues(inputList);
-//     console.log(inputListSorted);
+    // Sorting input list (2d matrix) by two values. In this case X then Y
+    const inputListSorted = this.sortByMultipleValues(inputList);
+    console.log(inputListSorted);
 
-//     // Changing the inputList to start from the startingPoem and appending the starting poem to output
-//     const inputListSortedStr = inputListSorted.map(poemCode => String(poemCode.join('-')));
-//     const startingPoemIndex = inputListSortedStr.indexOf(startingPoemStr);
-//     let fullySortedPoemList = inputListSorted.slice(startingPoemIndex).concat(inputListSorted.slice(0, startingPoemIndex));
+    // Changing the inputList to start from the startingPoem and appending the starting poem to output
+    const inputListSortedStr = inputListSorted.map(poemCode => String(poemCode.join('-')));
+    const startingPoemIndex = inputListSortedStr.indexOf(startingPoemStr);
+    let fullySortedPoemList = inputListSorted.slice(startingPoemIndex).concat(inputListSorted.slice(0, startingPoemIndex));
 
-//     while (successCounter < numOfPoems - 1) {
-//         let hasTextVar = true;
-//         targetElement = fullySortedPoemList[indexCounter]
-//         // Checks if the current poem contains the correct coordinate for a given axis
-//         // Iterate currentCoord and currentUniqueCoordList
-//         if (!outputList.includes(targetElement) && targetElement[currentCoord] == currentUniqueList[0]) {
-//             const currentPoemName = targetElement.join('-') + '.json'
-//             const poemPath = path.join(__dirname, '../syllabaryPoems', currentPoemName);
-//             const poemContent = readFileSync(poemPath);
-//             const poemJson = JSON.parse(poemContent);
-//             const contentJson = poemJson['poem'];
-//             if (contentJson['title'] === null) {
-//                 contentJson['title'] = 'Untitled';
-//             }
-//             if (contentJson['text'] === null) {
-//                 hasTextVar = false;
-//             }
-//             console.log(outputList);
-//             outputList.push({
-//             code: targetElement.join('-'),
-//             title: contentJson['title'],
-//             text: contentJson['text'],
-//             hasText: hasTextVar,
-//         })
-//             fullySortedPoemList = fullySortedPoemList.slice(indexCounter).concat(fullySortedPoemList.slice(0, indexCounter));
-//             indexCounter = 0
-//             currentCoord = nextCoordDict[currentCoord]
-//             currentUniqueList = currentUniqueList.slice(1).concat(currentUniqueList.slice(0, 1));
-//             currentUniqueList = nextUniqueDict[currentCoord]
-//             const currentUniqueListCoord = currentUniqueList.indexOf(fullySortedPoemList[indexCounter][currentCoord]);
-//             currentUniqueList = currentUniqueList.slice(currentUniqueListCoord).concat(currentUniqueList.slice(0, currentUniqueListCoord));
-//             successCounter++;
-//         }
-//         indexCounter++;
-//     }
-//     const zip = new PizZip(docTemplate);
-//     const doc = new Docxtemplater(zip, {parser: this.parser});
-//     const finalOutputData = {'poemList': outputList};
-//     doc.setData(finalOutputData);
-//     doc.render()
-//     const buf = doc.getZip().generate({type: 'nodebuffer'});
-//     writeFileSync(path.resolve(__dirname, '../../syllabary-poems_' + numOfPoems + '_' + startingPoem.join('-') + '.docx'), buf);
-//     // location.href = 'confirmationPage.html';
-// }
+    while (successCounter < numOfPoems - 1) {
+        let hasTextVar = true;
+        currentTargetElement = fullySortedPoemList[indexCounter]
+        // Checks if the current poem contains the correct coordinate for a given axis
+        // Iterate currentCoord and currentUniqueCoordList
+        if (!outputList.includes(currentTargetElement) && currentTargetElement[currentCoord] == currentUniqueList[0]) {
+            const currentPoemName = currentTargetElement.join('-') + '.json'
+            const poemPath = join(__dirname, '../syllabaryPoems', currentPoemName);
+            const poemContent = readFileSync(poemPath);
+            const poemJson = JSON.parse(poemContent.toString());
+            const contentJson = poemJson['poem'];
+            if (contentJson['title'] === null) {
+                contentJson['title'] = 'Untitled';
+            }
+            if (contentJson['text'] === null) {
+                hasTextVar = false;
+            }
+            console.log(outputList);
+            outputTemplateList.push(`{
+            "code": "${currentTargetElement.join('-')}",
+            "title": "${contentJson['title']}",
+            "text": "${contentJson['text']}",
+            "hasText": "${hasTextVar}",
+        }`)
+            fullySortedPoemList = fullySortedPoemList.slice(indexCounter).concat(fullySortedPoemList.slice(0, indexCounter));
+            indexCounter = 0
+            currentCoord = nextCoordDict[currentCoord]
+            currentUniqueList = currentUniqueList.slice(1).concat(currentUniqueList.slice(0, 1));
+            currentUniqueList = nextUniqueDict[currentCoord]
+            const currentUniqueListCoord = currentUniqueList.indexOf(fullySortedPoemList[indexCounter][currentCoord]);
+            currentUniqueList = currentUniqueList.slice(currentUniqueListCoord).concat(currentUniqueList.slice(0, currentUniqueListCoord));
+            successCounter++;
+        }
+        indexCounter++;
+    }
+    const zip = new PizZip(docTemplate);
+    const doc = new Docxtemplater(zip, {parser: this.parser});
+    const finalOutputData = {'poemList': outputTemplateList};
+    doc.setData(finalOutputData);
+    doc.render()
+    const buf = doc.getZip().generate({type: 'nodebuffer'});
+    writeFileSync(resolve(__dirname, '../../syllabary-poems_' + numOfPoems + '_' + startingPoem.join('-') + '.docx'), buf);
+}
 
 
   email = new FormControl('', [Validators.required, Validators.email]);
@@ -193,17 +194,17 @@ export class HomeComponent implements OnInit {
   }
 
   
-  public angularParser(tag) {
+  public angularParser(tag: string) {
     if (tag === '.') {
         return {
-            get: function(s){ return s;}
+            get: function(s: any){ return s;}
         };
     }
     const expr = expressions.compile(
         tag.replace(/(’|‘)/g, "'").replace(/(“|”)/g, '"')
     );
     return {
-        get: function(scope, context) {
+        get: function(scope: any, context: { scopeList: any; num: any; }) {
             let obj = {};
             const scopeList = context.scopeList;
             const num = context.num;
@@ -214,10 +215,10 @@ export class HomeComponent implements OnInit {
         }
     };
   }
-  public parser(tag) {
+  public parser(tag: string) {
   if (tag === "$pageBreakExceptLast") {
       return {
-          get(scope, context) {
+          get(scope: any, context: { scopePathLength: string | any[]; scopePathItem: string | any[]; }) {
               const totalLength = context.scopePathLength[context.scopePathLength.length - 1];
               const index = context.scopePathItem[context.scopePathItem.length - 1];
               const isLast = index === totalLength - 1;
@@ -237,21 +238,4 @@ export class HomeComponent implements OnInit {
 
 }
 
-function shuffle(array) {
-  var currentIndex = array.length,  randomIndex;
-
-  // While there remain elements to shuffle...
-  while (currentIndex != 0) {
-
-    // Pick a remaining element...
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-
-    // And swap it with the current element.
-    [array[currentIndex], array[randomIndex]] = [
-      array[randomIndex], array[currentIndex]];
-  }
-
-  return array;
-}
 
