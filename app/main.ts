@@ -2,6 +2,7 @@ import { app, BrowserWindow, screen, ipcMain } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as url from 'url';
+import { resolve } from 'path';
 
 // Initialize remote module
 require('@electron/remote/main').initialize();
@@ -95,4 +96,9 @@ try {
 ipcMain.on("getFiles", (event, arg) => {
   const files = fs.readdirSync(path.resolve(__dirname, "../src/assets/syllabaryPoems"));
   win.webContents.send("getFilesResponse", files);
+});
+
+ipcMain.on("getDocTemplate", (event, arg) => {
+  const docTemplate = fs.readFileSync(resolve(__dirname, '../src/assets/poetry-template.docx'), );  
+  win.webContents.send("getDocTemplateResponse", docTemplate);
 });

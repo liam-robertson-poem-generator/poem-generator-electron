@@ -6,6 +6,7 @@ import { ipcRenderer, webFrame } from 'electron';
 import * as remote from '@electron/remote';
 import * as childProcess from 'child_process';
 import * as fs from 'fs';
+import { resolve } from 'path';
 
 @Injectable({
   providedIn: 'root'
@@ -43,6 +44,15 @@ export class ElectronService {
         resolve(arg);
       });
       this.ipcRenderer.send("getFiles");
+    });
+  }
+
+  async getDocTemplate() {
+    return new Promise<string[]>((resolve, reject) => {
+      this.ipcRenderer.once("getDocTemplateResponse", (event, arg) => {
+        resolve(arg);
+      });
+      this.ipcRenderer.send("getDocTemplate");
     });
   }
 }

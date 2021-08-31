@@ -7,7 +7,6 @@ import { map, startWith } from 'rxjs/operators';
 const expressions = require('angular-expressions');
 const PizZip = require('pizzip');
 const Docxtemplater = require('docxtemplater');
-const util = require('util')
 import assign from "lodash/assign";
 import { readFileSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
@@ -29,6 +28,7 @@ export class HomeComponent implements OnInit {
   filteredOptions: Observable<string[]>;
   public poemListRaw: any[];
   public poemList: number[][];
+  docTemplate: string[];
   foods: Food[] = [
     {value: 'steak-0', viewValue: 'Steak'},
     {value: 'pizza-1', viewValue: 'Pizza'},
@@ -43,10 +43,15 @@ export class HomeComponent implements OnInit {
       var poemListRaw = await this.electronService.getFiles();
       return poemListRaw;
     })();
+
+    var asyncDocTemplate = (async () => {
+      var docTemplate = await this.electronService.getDocTemplate();
+      return docTemplate;
+    })();
   
     (async () => {
       this.poemListRaw = await asyncPoemList
-      console.log(this.poemListRaw);
+      this.docTemplate = await asyncDocTemplate
       this.poemList = this.refinePoemList(this.poemListRaw)
       this.optionsInt = this.sortByMultipleValues(this.poemList)
       this.options = this.optionsInt.map(value => value.join("-").toString())
@@ -56,13 +61,14 @@ export class HomeComponent implements OnInit {
         map(value => this._filter(value))
       );
 
+      this.readWritePoems(this.poemList, "[1-1-1]", 20, "forwards", this.docTemplate)
+
     })();
-    
     
 
   }
 
-  public readWritePoems(inputList: number[][], startingPoemStr: string, numOfPoems: number, poemOrder: number) {
+  public readWritePoems(inputList: number[][], startingPoemStr: string, numOfPoems: number, poemOrder: string, docTemplate: string[]) {
     // Initialising startup variables
     const xUniqueCoordList: number[] = this.sortedUniqueList(inputList, 0)
     const yUniqueCoordList: number[] = this.sortedUniqueList(inputList, 1)
@@ -77,7 +83,6 @@ export class HomeComponent implements OnInit {
     const startingPoem: number[] = startingPoemStr.split('-').map((coord: string) => parseInt(coord));
     const outputTemplateList: string[] = [];
     const outputList: number[][] = [];
-    const docTemplate = readFileSync(resolve(__dirname, '../../assets/poetry-template.docx'), );
     const nextCoordDict= {0:1, 1:2, 2:0};
     const nextUniqueDict = {0:yUniqueCoordList, 1:zUniqueCoordList, 2:xUniqueCoordList}
 
@@ -175,7 +180,7 @@ export class HomeComponent implements OnInit {
     return finalUniqueList
   }
 
-  public refinePoemList(inputPoemListRaw: string[]) {
+  public refinePoemList(inputPoemListRaw: string[]): number[][] {
     let inputPoemList: string[] = [];
     inputPoemList = inputPoemListRaw.reduce(function (filtered: any[], currentElement: string) {
       if (currentElement.slice(-5) === '.json') {
