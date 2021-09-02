@@ -38,21 +38,44 @@ export class ElectronService {
     }
   }
 
-  async getFiles() {
+  async getDirectory(dirPath) {
     return new Promise<string[]>((resolve, reject) => {
-      this.ipcRenderer.once("getFilesResponse", (event, arg) => {
-        resolve(arg);
+      this.ipcRenderer.once("getDirectoryResponse", (event, dirContent) => {
+        resolve(dirContent);
       });
-      this.ipcRenderer.send("getFiles");
+      this.ipcRenderer.send("getDirectory", dirPath);
     });
   }
 
-  async getDocTemplate() {
+  async readFile(filePath) {
     return new Promise<string[]>((resolve, reject) => {
-      this.ipcRenderer.once("getDocTemplateResponse", (event, arg) => {
-        resolve(arg);
+      this.ipcRenderer.once("readFileResponse", (event, fileContent) => {
+        resolve(fileContent);
       });
-      this.ipcRenderer.send("getDocTemplate");
+      this.ipcRenderer.send("readFile", filePath);
     });
   }
+
+  async writeFile(filePath, buf) {
+    return new Promise<string[]>((resolve, reject) => {
+      this.ipcRenderer.once("writeFileResponse", (event, fileContent) => {
+        resolve(fileContent);
+      });
+      this.ipcRenderer.send("writeFile", filePath, buf);
+    });
+  }
+
+  // ipcMain.on("writeFile", (event, filePath, buf) => {
+  //   const docTemplate = fs.writeFileSync(filePath, buf);
+  //   win.webContents.send("writeFileResponse", docTemplate);
+  // });
+
+  // async getDocTemplate(numOfPoems, startingPoem, buf) {
+  //   return new Promise<string[]>((resolve, reject) => {
+  //     this.ipcRenderer.once("getDocTemplateResponse", (event, docTemplate) => {
+  //       resolve(docTemplate);
+  //     });
+  //     this.ipcRenderer.send("getDocTemplate", numOfPoems, startingPoem, buf);
+  //   });
+  // }
 }
