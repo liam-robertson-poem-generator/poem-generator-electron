@@ -36,27 +36,23 @@ export class HomeComponent implements OnInit {
 
   constructor(private router: Router, private electronService: ElectronService) {  
   }
-  ngOnInit(): void {
-    (async () => {
+  ngOnInit() {
       const poemListPath = resolve(__dirname, "../../../../../../src/assets/syllabaryPoems")      
-      this.poemListRaw = await this.electronService.getDirectory(poemListPath)
-      console.log(this.poemListRaw);      
+      this.electronService.getDirectory(poemListPath).then((poemListRaw) => {
+        this.readWritePoems(poemListRaw, "[1-1-1]" , 20, "forwards", this.docTemplate)
+      });
       
-      this.optionsInt = this.sortByMultipleValues(this.poemList)
-      this.options = this.optionsInt.map(value => value.join("-").toString())
-      this.filteredOptions = this.myControl.valueChanges
-      .pipe(
-        startWith(''), 
-        map(value => this._filter(value))
-      );
+      // this.optionsInt = await this.sortByMultipleValues(this.poemList)
+      // this.options = this.optionsInt.map(value => value.join("-").toString())
+      // this.filteredOptions = this.myControl.valueChanges
+      // .pipe(
+      //   startWith(''), 
+      //   map(value => this._filter(value))
+      // );
 
-      this.readWritePoems(this.poemListRaw, "[1-1-1]" , 20, "forwards", this.docTemplate)
-
-    })();
 }
 
-  public readWritePoems(inputListRaw: any[], startingPoemStr: string, numOfPoems: number, poemOrder: string, docTemplate: string[]) {
-    (async () => {
+  public async readWritePoems(inputListRaw: any[], startingPoemStr: string, numOfPoems: number, poemOrder: string, docTemplate: string[]) {
       // Initialising startup variables
       let successCounter: number = 0;
       let loopCounter: number = 0;
@@ -68,8 +64,13 @@ export class HomeComponent implements OnInit {
       const outputTemplateList: string[] = [];
       const outputList: number[][] = [];
       const nextCoordDict= {0:1, 1:2, 2:0};
-
+      console.log(inputListRaw);
+      console.log("hello");
+      
+      
       const inputList = this.refinePoemList(inputListRaw)
+      console.log(inputList);
+      
       const xUniqueCoordList: number[] = this.sortedUniqueList(inputList, 0)
       const yUniqueCoordList: number[] = this.sortedUniqueList(inputList, 1)
       const zUniqueCoordList: number[] = this.sortedUniqueList(inputList, 2)
@@ -120,6 +121,8 @@ export class HomeComponent implements OnInit {
           }
           indexCounter++;
       }
+      console.log("Testest");
+      
       const zip = new PizZip(docTemplate);
       const doc = new Docxtemplater(zip, {parser: this.parser});
       const finalOutputData = {'poemList': outputTemplateList};
@@ -128,7 +131,7 @@ export class HomeComponent implements OnInit {
       const buf = doc.getZip().generate({type: 'nodebuffer'});
       const templatePath = resolve(__dirname, '../../syllabary-poems_' + numOfPoems + '_' + startingPoem.join('-') + '.docx')
       await this.electronService.writeFile(templatePath, buf);
-  })();
+      
 }
 
 
