@@ -9,6 +9,7 @@ const PizZip = require('pizzip');
 const Docxtemplater = require('docxtemplater');
 import assign from "lodash/assign";
 import { join, resolve } from 'path';
+import { equal } from 'assert/strict';
 
 interface Food {
 	value: string;
@@ -42,8 +43,8 @@ export class HomeComponent implements OnInit {
 	}
 	async ngOnInit() {
 		this.poemListPath = resolve(__dirname, "../../../../../../src/assets/syllabaryPoems")    
-		this.startingPoemStr = "[1-1-1]"
-		this.startingPoem = this.startingPoemStr.split('-').map((coord: string) => parseInt(coord));
+		this.startingPoemStr = "1-5-1"
+		this.startingPoem = this.startingPoemStr.split('-').map((coord) => parseInt(coord));
 		this.poemListRaw = await this.electronService.getDirectory(this.poemListPath)			
 		this.poemList = this.refinePoemList(this.poemListRaw)
 		this.poemListSorted = this.sortByMultipleValues(this.poemList);
@@ -56,36 +57,47 @@ export class HomeComponent implements OnInit {
 			map(value => this._filter(value))
 		);
 	
-		this.readWritePoems(this.poemList, this.startingPoem, 20, "forwards", this.docTemplate)
+		this.readWritePoems(this.poemListSorted, this.startingPoem, 20, "forwards", this.docTemplate)
 }
 
 	public async readWritePoems(poemListRaw: number[][], startingPoem: number[], numOfPoems: number, poemOrder: string, docTemplate: string[]) {
 			// Initialising startup variables
 			let successCounter: number = 0;
 			let indexCounter: number = 0;
-			let currentTargetElement: number[] = [1, 1, 1];
-			let currentCoord: number = 1;
-			const outputTemplateList: string[] = [];
+			let currentTargetPoem: number[];
+			let currentCoord: number = 0;
+			const outputTemplateList = [];
 			const outputList: number[][] = [];
 			const nextCoordDict= {0:1, 1:2, 2:0};
+			const poemListStr = poemListRaw.map((poemCode) => String(poemCode));
 
-			const xUniqueCoordList: number[] = this.sortedUniqueList(poemListRaw, 0)
-			const yUniqueCoordList: number[] = this.sortedUniqueList(poemListRaw, 1)
-			const zUniqueCoordList: number[] = this.sortedUniqueList(poemListRaw, 2)
+			const xUniqueCoordListRaw: number[] = this.sortedUniqueList(poemListRaw, 0)
+			const yUniqueCoordListRaw: number[] = this.sortedUniqueList(poemListRaw, 1)
+			const zUniqueCoordListRaw: number[] = this.sortedUniqueList(poemListRaw, 2)
+			const xUniqueCoordList: number[] = xUniqueCoordListRaw.slice(xUniqueCoordListRaw.indexOf(startingPoem[0])).concat(xUniqueCoordListRaw.slice(0, xUniqueCoordListRaw.indexOf(startingPoem[0])));
+			const yUniqueCoordList: number[] = yUniqueCoordListRaw.slice(yUniqueCoordListRaw.indexOf(startingPoem[1])).concat(yUniqueCoordListRaw.slice(0, yUniqueCoordListRaw.indexOf(startingPoem[1])));
+			const zUniqueCoordList: number[] = zUniqueCoordListRaw.slice(zUniqueCoordListRaw.indexOf(startingPoem[2])).concat(zUniqueCoordListRaw.slice(0, zUniqueCoordListRaw.indexOf(startingPoem[2])));
+
 			const nextUniqueDict = {0:yUniqueCoordList, 1:zUniqueCoordList, 2:xUniqueCoordList}
-			let currentUniqueList: number[] = yUniqueCoordList;
+			let currentUniqueList: number[] = xUniqueCoordList;
 
 			// Changing the inputList to start from the startingPoem and appending the starting poem to output
-			const startingPoemIndex = poemListRaw.indexOf(startingPoem);
-			let poemList = poemListRaw.slice(startingPoemIndex).concat(poemListRaw.slice(0, startingPoemIndex));			
-
-			while (successCounter < numOfPoems - 1) {
+			const startingPoemIndex = poemListStr.indexOf(startingPoem.toString());			
+			let poemList = poemListRaw.slice(startingPoemIndex).concat(poemListRaw.slice(0, startingPoemIndex));
+			console.log(poemList);
+					
+			while (successCounter < numOfPoems) {
 					let hasTextVar = true;
-					currentTargetElement = poemList[indexCounter]
+					currentTargetPoem = poemList[indexCounter]
+					console.log(currentTargetPoem);
+					console.log(currentCoord);
+					
+					console.log((currentTargetPoem) && currentTargetPoem[currentCoord] == currentUniqueList[0]);
+					
 					// Checks if the current poem contains the correct coordinate for a given axis
 					// Iterate currentCoord and currentUniqueCoordList
-					if (!outputList.includes(currentTargetElement) && currentTargetElement[currentCoord] == currentUniqueList[0]) {
-							const currentPoemName = currentTargetElement.join('-') + '.json'
+					if (!outputList.includes(currentTargetPoem) && currentTargetPoem[currentCoord] == currentUniqueList[0]) {
+							const currentPoemName = currentTargetPoem.join('-') + '.json'
 							const poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabaryPoems"), currentPoemName);
 							const poemContent = await this.electronService.readFile(poemPath)
 							const poemJson = JSON.parse(poemContent.toString());   
@@ -96,23 +108,25 @@ export class HomeComponent implements OnInit {
 							if (contentJson['text'] === null) {
 									hasTextVar = false;
 							}
-							outputTemplateList.push(`{
-							"code": "${currentTargetElement.join('-')}",
-							"title": "${contentJson['title']}",
-							"text": "${contentJson['text']}",
-							"hasText": "${hasTextVar}",
-					}`)
+							outputTemplateList.push({
+							"code": currentTargetPoem.join('-'),
+							"title": contentJson['title'],
+							"text": contentJson['text'],
+							"hasText": hasTextVar,
+					})
 							poemList = poemList.slice(indexCounter).concat(poemList.slice(0, indexCounter));
 							indexCounter = 0
 							currentCoord = nextCoordDict[currentCoord]							
 							currentUniqueList = currentUniqueList.slice(1).concat(currentUniqueList.slice(0, 1));
 							currentUniqueList = nextUniqueDict[currentCoord]
 							const currentUniqueListCoord = currentUniqueList.indexOf(poemList[indexCounter][currentCoord]);
-							currentUniqueList = currentUniqueList.slice(currentUniqueListCoord).concat(currentUniqueList.slice(0, currentUniqueListCoord));
+							currentUniqueList = currentUniqueList.slice(currentUniqueListCoord + 1).concat(currentUniqueList.slice(0, currentUniqueListCoord + 1));
 							successCounter++;
 					}
 					indexCounter++;					
-			}			
+			}		
+			console.log(outputTemplateList);
+				
 			const zip = new PizZip(docTemplate);
 			const doc = new Docxtemplater(zip, {parser: this.parser});
 			const finalOutputData = {'poemList': outputTemplateList};

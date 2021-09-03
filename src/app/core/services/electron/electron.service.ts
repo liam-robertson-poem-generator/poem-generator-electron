@@ -39,9 +39,7 @@ export class ElectronService {
   }
 
   async getDirectory(dirPath) {
-    return new Promise<string[]>((resolve, reject) => {
-      console.log("dddddddddd");
-      
+    return new Promise<string[]>((resolve, reject) => {      
       this.ipcRenderer.once("getDirectoryResponse", (event, dirContent) => {
         resolve(dirContent);
       });
@@ -52,7 +50,6 @@ export class ElectronService {
   async readFile(filePath) {
     return new Promise<string[]>((resolve, reject) => {      
       this.ipcRenderer.once("readFileResponse", (event, fileContent) => {
-        console.log("jjjjjjjjjj");
         resolve(fileContent);
       });
       this.ipcRenderer.send("readFile", filePath);

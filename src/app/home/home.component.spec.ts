@@ -52,6 +52,10 @@ describe('HomeComponent', () => {
   });
 
   it('should iterate through syllables one at a time', () => {
+    const sorted1 = component.sortByMultipleValues(randomPoemList1);
+    const iterated1 = component.readWritePoems(sorted1, [2-4-12], 15, "forwards", ["docTemplate"]);
+    const expectedIterated1 = [[1-5-1], []];
+    expect(iterated1).toEqual(expectedIterated1);
     expect(true).toBeTruthy();
   });
 
