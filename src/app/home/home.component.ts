@@ -134,7 +134,8 @@ export class HomeComponent implements OnInit {
 			doc.render()
 			const buf = doc.getZip().generate({type: 'nodebuffer'});
 			const templatePath = resolve(__dirname, '../../syllabary-poems_' + numOfPoems + '_' + startingPoem.join('-') + '.docx')
-			this.electronService.writeFile(templatePath, buf);
+			return outputTemplateList
+			// this.electronService.writeFile(templatePath, buf);
 }
 
 	email = new FormControl('', [Validators.required, Validators.email]);

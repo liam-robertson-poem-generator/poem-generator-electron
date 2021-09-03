@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { async, ComponentFixture, fakeAsync, TestBed, waitForAsync } from '@angular/core/testing';
 import { HomeComponent } from './home.component';
 import { HomeModule } from './home.module';
 import { TranslateModule } from '@ngx-translate/core';
@@ -32,7 +32,7 @@ describe('HomeComponent', () => {
     const expectedSorted1 = [[ 2, 4, 12 ], [ 3, 2, 12 ], [ 4, 9, 8 ], [ 6, 3, 17 ], [ 6, 6, 4 ], [ 9, 4, 2 ], [ 10, 7, 8 ], [ 10, 8, 18 ], [ 10, 9, 10 ], [ 12, 1, 11 ], [ 12, 6, 18 ], [ 12, 7, 12 ], [ 13, 4, 12 ], [ 13, 8, 17 ], [ 14, 3, 11 ], [ 14, 6, 17 ], [ 16, 4, 17 ], [ 16, 5, 3 ], [ 16, 7, 8 ], [ 19, 2, 9 ]]
     const expectedSorted2 = [[ 3, 2, 11 ], [ 3, 8, 8 ], [ 4, 5, 18 ], [ 6, 5, 10 ], [ 7, 7, 8 ], [ 9, 5, 2 ], [ 9, 6, 9 ], [ 10, 10, 12 ], [ 11, 1, 3 ], [ 11, 3, 17 ], [ 11, 8, 11 ], [ 12, 1, 17 ], [ 13, 4, 9 ], [ 13, 9, 9 ], [ 17, 3, 13 ], [ 18, 3, 9 ], [ 19, 1, 9 ], [ 19, 10, 10 ], [ 20, 4, 14 ], [ 20, 4, 18 ]]
     const expectedSorted3 = [[ 1, 8, 10 ], [ 2, 9, 8 ], [ 3, 2, 17 ], [ 5, 8, 18 ], [ 5, 10, 8 ], [ 6, 5, 10 ], [ 8, 2, 4 ], [ 10, 8, 7 ], [ 10, 8, 17 ], [ 11, 4, 2 ], [ 11, 5, 9 ], [ 12, 2, 17 ], [ 14, 4, 4 ], [ 14, 8, 13 ], [ 16, 2, 17 ], [ 16, 3, 10 ], [ 16, 4, 7 ], [ 16, 5, 10 ], [ 20, 3, 9 ], [ 20, 6, 17 ]]
-    
+
     expect(sorted1).toEqual(expectedSorted1);
     expect(sorted2).toEqual(expectedSorted2);
     expect(sorted3).toEqual(expectedSorted3);
@@ -51,13 +51,17 @@ describe('HomeComponent', () => {
     expect(sortedUnique3).toEqual(expectedSortedUnique3);
   });
 
-  it('should iterate through syllables one at a time', () => {
-    const sorted1 = component.sortByMultipleValues(randomPoemList1);
-    const iterated1 = component.readWritePoems(sorted1, [2-4-12], 15, "forwards", ["docTemplate"]);
-    const expectedIterated1 = [[1-5-1], []];
-    expect(iterated1).toEqual(expectedIterated1);
-    expect(true).toBeTruthy();
-  });
+  it('should iterate through syllables one at a time', fakeAsync(() => {
+      const sorted1 = component.sortByMultipleValues(randomFullPoemList);
+      const iterated1 = await component.readWritePoems(sorted1, [2-4-12], 15, "forwards", ["docTemplate"]);
+      const expectedIterated1 = [[1-5-1], []];
+      const iteratedOutput1 = iterated1.map((poemCode) => poemCode["code"]);
+      console.log(iteratedOutput1);
+
+      fixture.whenStable().then(() => {
+        expect(false).toBeTrue();
+      });
+  }));
 
   const randomPoemList3 = 
   [ [ 11, 4, 2 ],
