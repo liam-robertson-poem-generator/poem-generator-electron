@@ -25,7 +25,7 @@ export class HomeComponent implements OnInit {
   public optionsInt: number[][];
   public options: string[];
   filteredOptions: Observable<string[]>;
-  public poemListRaw: any[];
+  public poemListRaw: any;
   public poemList: number[][];
   docTemplate: string[];
   foods: Food[] = [
@@ -36,20 +36,31 @@ export class HomeComponent implements OnInit {
 
   constructor(private router: Router, private electronService: ElectronService) {  
   }
-  ngOnInit() {
-      const poemListPath = resolve(__dirname, "../../../../../../src/assets/syllabaryPoems")      
-      this.electronService.getDirectory(poemListPath).then((poemListRaw) => {
-        this.readWritePoems(poemListRaw, "[1-1-1]" , 20, "forwards", this.docTemplate)
-      });
-      
-      // this.optionsInt = await this.sortByMultipleValues(this.poemList)
+  async ngOnInit() {
+      const poemListPath = resolve(__dirname, "../../../../../../src/assets/syllabaryPoems")    
+
+      // this.optionsInt = this.sortByMultipleValues(this.poemListRaw)
       // this.options = this.optionsInt.map(value => value.join("-").toString())
       // this.filteredOptions = this.myControl.valueChanges
       // .pipe(
       //   startWith(''), 
       //   map(value => this._filter(value))
       // );
+    this.poemListRaw = await this.electronService.getDirectory(poemListPath)
 
+      // this.poemListRaw = (async() => {await this.electronService.getDirectory(poemListPath)})();
+
+      // var asyncDocTemplate = (async () => {
+      //   var docTemplate = await this.electronService.getDocTemplate();
+      //   return docTemplate;
+      // })();
+      console.log(this.poemListRaw);
+      
+      this.readWritePoems(this.poemListRaw, "[1-1-1]" , 20, "forwards", this.docTemplate)
+
+      // this.electronService.getDirectory(this.poemListRaw).then((poemListRaw) => {
+      //   this.readWritePoems(poemListRaw, "[1-1-1]" , 20, "forwards", this.docTemplate)
+      // });
 }
 
   public async readWritePoems(inputListRaw: any[], startingPoemStr: string, numOfPoems: number, poemOrder: string, docTemplate: string[]) {
@@ -85,17 +96,36 @@ export class HomeComponent implements OnInit {
       const inputListSortedStr = inputListSorted.map(poemCode => String(poemCode.join('-')));
       const startingPoemIndex = inputListSortedStr.indexOf(startingPoemStr);
       let fullySortedPoemList = inputListSorted.slice(startingPoemIndex).concat(inputListSorted.slice(0, startingPoemIndex));
+      console.log(fullySortedPoemList[1]);
+      
 
       while (successCounter < numOfPoems - 1) {
           let hasTextVar = true;
           currentTargetElement = fullySortedPoemList[indexCounter]
           // Checks if the current poem contains the correct coordinate for a given axis
           // Iterate currentCoord and currentUniqueCoordList
+          console.log(currentTargetElement[currentCoord]);
+          console.log(currentUniqueList[0]);
+          console.log(!outputList.includes(currentTargetElement) && currentTargetElement[currentCoord] == currentUniqueList[0]);
+          
+          
+          
           if (!outputList.includes(currentTargetElement) && currentTargetElement[currentCoord] == currentUniqueList[0]) {
+            console.log("hellolll");
+            
               const currentPoemName = currentTargetElement.join('-') + '.json'
-              const poemPath = join(__dirname, '../syllabaryPoems', currentPoemName);
-              const poemContent = await this.electronService.readFile(poemPath);
+              
+              const poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabaryPoems"), currentPoemName);
+              console.log(poemPath);
+
+              const poemContent = await this.electronService.readFile(poemPath)
+              console.log(poemContent);
+              
               const poemJson = JSON.parse(poemContent.toString());   
+              console.log("bbbbb");
+              console.log(poemContent);
+
+
               const contentJson = poemJson['poem'];
               if (contentJson['title'] === null) {
                   contentJson['title'] = 'Untitled';
@@ -113,15 +143,23 @@ export class HomeComponent implements OnInit {
               fullySortedPoemList = fullySortedPoemList.slice(indexCounter).concat(fullySortedPoemList.slice(0, indexCounter));
               indexCounter = 0
               currentCoord = nextCoordDict[currentCoord]
+              console.log(currentUniqueList);
+              
               currentUniqueList = currentUniqueList.slice(1).concat(currentUniqueList.slice(0, 1));
+              console.log(currentUniqueList);
               currentUniqueList = nextUniqueDict[currentCoord]
               const currentUniqueListCoord = currentUniqueList.indexOf(fullySortedPoemList[indexCounter][currentCoord]);
               currentUniqueList = currentUniqueList.slice(currentUniqueListCoord).concat(currentUniqueList.slice(0, currentUniqueListCoord));
               successCounter++;
           }
           indexCounter++;
+          console.log("test2222");
+          
+          
       }
       console.log("Testest");
+      console.log(outputTemplateList.length);
+      
       
       const zip = new PizZip(docTemplate);
       const doc = new Docxtemplater(zip, {parser: this.parser});
@@ -130,10 +168,8 @@ export class HomeComponent implements OnInit {
       doc.render()
       const buf = doc.getZip().generate({type: 'nodebuffer'});
       const templatePath = resolve(__dirname, '../../syllabary-poems_' + numOfPoems + '_' + startingPoem.join('-') + '.docx')
-      await this.electronService.writeFile(templatePath, buf);
-      
+      this.electronService.writeFile(templatePath, buf);
 }
-
 
   email = new FormControl('', [Validators.required, Validators.email]);
 
@@ -168,7 +204,7 @@ export class HomeComponent implements OnInit {
   }
 
   public sortedUniqueList(inputList: number[][], coordIndex: number) {
-    const currentCoordSet= new Set(inputList.map(poemCode => poemCode[coordIndex]));  
+    const currentCoordSet = new Set(inputList.map(poemCode => poemCode[coordIndex]));  
     const currentCoordUnique = (Array.from(currentCoordSet));
     
     const finalUniqueList = currentCoordUnique.sort(function(a, b){return a - b});

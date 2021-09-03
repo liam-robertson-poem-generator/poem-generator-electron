@@ -95,12 +95,12 @@ try {
 
 
 ipcMain.on("getDirectory", (event, dirPath) => {
-  const files = fs.readdirSync(dirPath);
+  const files = fs.readdirSync(dirPath);  
   win.webContents.send("getDirectoryResponse", files);
-});
+});  
 
 ipcMain.on("readFile", (event, filePath) => {
-  const fileContent = fs.readFileSync(filePath, );  
+  const fileContent = fs.readFileSync(filePath, {encoding:'utf8', flag:'r'});  
   win.webContents.send("readFileResponse", fileContent);
 });
 
@@ -108,30 +108,3 @@ ipcMain.on("writeFile", (event, filePath, buf) => {
   const fileContent = fs.writeFileSync(filePath, buf);
   win.webContents.send("writeFileResponse", fileContent);
 });
-
-
-
-
-
-
-// ipcMain.on("getFiles", (event, arg) => {
-//   const files = fs.readdirSync(path.resolve(__dirname, "../src/assets/syllabaryPoems"));
-//   win.webContents.send("getFilesResponse", files);
-// });
-
-
-// ipcMain.on("getDocTemplate", (event, arg) => {
-//   const docTemplate = fs.readFileSync(resolve(__dirname, '../src/assets/poetry-template.docx'), );  
-//   win.webContents.send("getDocTemplateResponse", docTemplate);
-// });
-
-// ipcMain.on("getPoemContent", (event, arg) => {
-//   const poemContent = readFileSync(poemPath);
-//   win.webContents.send("getDocTemplateResponse", poemContent);
-// });
-
-// ipcMain.on("getDocTemplate", (event, numOfPoems, startingPoem, buf) => {
-//   const docTemplate = fs.writeFileSync(resolve(__dirname, '../../syllabary-poems_' + numOfPoems + '_' + startingPoem.join('-') + '.docx'), buf);
-//   win.webContents.send("getDocTemplateResponse", docTemplate);
-// });
-

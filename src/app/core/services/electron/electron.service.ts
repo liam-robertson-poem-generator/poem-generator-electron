@@ -40,6 +40,8 @@ export class ElectronService {
 
   async getDirectory(dirPath) {
     return new Promise<string[]>((resolve, reject) => {
+      console.log("dddddddddd");
+      
       this.ipcRenderer.once("getDirectoryResponse", (event, dirContent) => {
         resolve(dirContent);
       });
@@ -48,8 +50,9 @@ export class ElectronService {
   }
 
   async readFile(filePath) {
-    return new Promise<string[]>((resolve, reject) => {
+    return new Promise<string[]>((resolve, reject) => {      
       this.ipcRenderer.once("readFileResponse", (event, fileContent) => {
+        console.log("jjjjjjjjjj");
         resolve(fileContent);
       });
       this.ipcRenderer.send("readFile", filePath);
@@ -64,18 +67,4 @@ export class ElectronService {
       this.ipcRenderer.send("writeFile", filePath, buf);
     });
   }
-
-  // ipcMain.on("writeFile", (event, filePath, buf) => {
-  //   const docTemplate = fs.writeFileSync(filePath, buf);
-  //   win.webContents.send("writeFileResponse", docTemplate);
-  // });
-
-  // async getDocTemplate(numOfPoems, startingPoem, buf) {
-  //   return new Promise<string[]>((resolve, reject) => {
-  //     this.ipcRenderer.once("getDocTemplateResponse", (event, docTemplate) => {
-  //       resolve(docTemplate);
-  //     });
-  //     this.ipcRenderer.send("getDocTemplate", numOfPoems, startingPoem, buf);
-  //   });
-  // }
 }
