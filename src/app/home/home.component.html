@@ -8,10 +8,9 @@
         <h1>Syllabary Poem Generator</h1>
         <div class='content-container'>
             <form class="example-form">
-                <mat-form-field class="example-full-width" appearance="fill">
+                <mat-form-field  hintLabel= "Max {{poemList.length}} poems" class="example-full-width" appearance="fill">
                     <mat-label>How many poems do you want to generate?</mat-label>
-                    <input matInput placeholder="pat@example.com" [formControl]="email" required>
-                    <mat-error *ngIf="email.invalid">{{getErrorMessage()}}</mat-error>
+                    <input matInput type="number" [formControl]="numberFormControl" required>
                 </mat-form-field>
                 <mat-form-field class="example-dropdown" appearance="fill">
                     <mat-label>What poem do you want to select?</mat-label>
@@ -27,13 +26,12 @@
                     </mat-option>
                     </mat-autocomplete>
                 </mat-form-field>
-                <mat-form-field class="example-dropdown" appearance="fill">
-                    <mat-label>Favorite food</mat-label>
-                    <mat-select>
-                      <mat-option *ngFor="let food of foods" [value]="food.value">
-                        {{food.viewValue}}
-                      </mat-option>
-                    </mat-select>
+                <mat-form-field appearance="fill" class="example-dropdown" >
+                    <mat-label>Do you want to start or end on this poem?</mat-label>
+                    <select matNativeControl required>
+                        <option value="start">Start</option>
+                        <option value="end">End</option>
+                    </select>
                 </mat-form-field>
             </form>
             <div class="example-button-row">

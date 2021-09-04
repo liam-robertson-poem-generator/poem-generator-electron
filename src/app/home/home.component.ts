@@ -11,11 +11,6 @@ import assign from "lodash/assign";
 import { join, resolve } from 'path';
 import { equal } from 'assert/strict';
 
-interface Food {
-	value: string;
-	viewValue: string;
-}
-
 @Component({
 	selector: 'app-home',
 	templateUrl: './home.component.html',
@@ -33,20 +28,20 @@ export class HomeComponent implements OnInit {
 	public startingPoem: number[];
 	public poemListPath: string;
 	docTemplate: string[];
-	foods: Food[] = [
-		{value: 'steak-0', viewValue: 'Steak'},
-		{value: 'pizza-1', viewValue: 'Pizza'},
-		{value: 'tacos-2', viewValue: 'Tacos'}
-	];
+	numberFormControl: FormControl;
 
 	constructor(private router: Router, private electronService: ElectronService) {  
 	}
 	async ngOnInit() {
-		this.poemListPath = resolve(__dirname, "../../../../../../src/assets/syllabaryPoems")    
+		this.poemListPath = resolve(__dirname, "../../../../../../src/assets/syllabaryPoems")   
 		this.startingPoemStr = "15-3-18"
 		this.startingPoem = this.startingPoemStr.split('-').map((coord) => parseInt(coord));
 		this.poemListRaw = await this.electronService.getDirectory(this.poemListPath)			
 		this.poemList = this.refinePoemList(this.poemListRaw)
+		this.numberFormControl = new FormControl('', [
+			Validators.min(0),
+			Validators.max(this.poemList.length),
+		 ]);
 		this.poemListSorted = this.sortByMultipleValues(this.poemList);		
 
 		this.optionsInt = this.poemListSorted;
@@ -196,15 +191,8 @@ export class HomeComponent implements OnInit {
 // 			// this.electronService.writeFile(templatePath, buf);
 // }
 
-	email = new FormControl('', [Validators.required, Validators.email]);
 
-	getErrorMessage() {
-		if (this.email.hasError('required')) {
-			return 'You must enter a value';
-		}
-
-		return this.email.hasError('email') ? 'Not a valid email' : '';
-	}
+	
 
 	public sortByMultipleValues(inputList: number[][]) {
 		const outputListRaw = [];
