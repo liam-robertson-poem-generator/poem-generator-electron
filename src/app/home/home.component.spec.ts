@@ -1,4 +1,4 @@
-import { async, ComponentFixture, fakeAsync, TestBed, waitForAsync } from '@angular/core/testing';
+import { async, ComponentFixture, fakeAsync, TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { HomeComponent } from './home.component';
 import { HomeModule } from './home.module';
 import { TranslateModule } from '@ngx-translate/core';
@@ -52,15 +52,10 @@ describe('HomeComponent', () => {
   });
 
   it('should iterate through syllables one at a time', fakeAsync(() => {
-      const sorted1 = component.sortByMultipleValues(randomFullPoemList);
-      const iterated1 = await component.readWritePoems(sorted1, [2-4-12], 15, "forwards", ["docTemplate"]);
-      const expectedIterated1 = [[1-5-1], []];
-      const iteratedOutput1 = iterated1.map((poemCode) => poemCode["code"]);
-      console.log(iteratedOutput1);
+    const actualOutput1 = component.readWritePoems(randomFullPoemList, [15, 3, 18], 20, "forwards")
+    const expectedIterated1 = [[15,3,18], [15,7,18], [15,7,8], [16,7,8], [16,8,8], [16,8,9], [17,8,9]];
 
-      fixture.whenStable().then(() => {
-        expect(false).toBeTrue();
-      });
+    expect(expectedIterated1).toEqual(actualOutput1);      
   }));
 
   const randomPoemList3 = 
@@ -84,7 +79,7 @@ describe('HomeComponent', () => {
   [ 3, 2, 17 ],
   [ 20, 6, 17 ],
   [ 10, 8, 17 ] ]
-
+  // const expectedIterated1 = [[15,3,18], [15,7,18], [15,7,8], [16,7,8], [16,4,8], [16,4,2], [17,4,2], [17,5,2], [17,5,1], [20,5,1], [20,8,1], [20,8,4], [16,8,4], [16,4,4], [16,4,3], [17,4,3], [17,5,3], [17,5,4], [16,5,4], [16,6,4]];
   const randomPoemList2 = 
   [ [ 6, 5, 10 ],
   [ 10, 10, 12 ],

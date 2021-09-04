@@ -43,11 +43,11 @@ export class HomeComponent implements OnInit {
 	}
 	async ngOnInit() {
 		this.poemListPath = resolve(__dirname, "../../../../../../src/assets/syllabaryPoems")    
-		this.startingPoemStr = "1-5-1"
+		this.startingPoemStr = "15-3-18"
 		this.startingPoem = this.startingPoemStr.split('-').map((coord) => parseInt(coord));
 		this.poemListRaw = await this.electronService.getDirectory(this.poemListPath)			
 		this.poemList = this.refinePoemList(this.poemListRaw)
-		this.poemListSorted = this.sortByMultipleValues(this.poemList);
+		this.poemListSorted = this.sortByMultipleValues(this.poemList);		
 
 		this.optionsInt = this.poemListSorted;
 		this.options = this.optionsInt.map(value => value.join("-").toString())
@@ -56,87 +56,145 @@ export class HomeComponent implements OnInit {
 			startWith(''), 
 			map(value => this._filter(value))
 		);
-	
-		this.readWritePoems(this.poemListSorted, this.startingPoem, 20, "forwards", this.docTemplate)
+		this.readWritePoems(this.poemListSorted, this.startingPoem, 20, "forwards")
 }
 
-	public async readWritePoems(poemListRaw: number[][], startingPoem: number[], numOfPoems: number, poemOrder: string, docTemplate: string[]) {
-			// Initialising startup variables
-			let successCounter: number = 0;
-			let indexCounter: number = 0;
-			let currentTargetPoem: number[];
-			let currentCoord: number = 0;
-			const outputTemplateList = [];
-			const outputList: number[][] = [];
-			const nextCoordDict= {0:1, 1:2, 2:0};
-			const poemListStr = poemListRaw.map((poemCode) => String(poemCode));
+	public readWritePoems(poemList: number[][], startingPoem: number[], numOfPoems: number, poemOrder: string) {
+		const xUniqueCoordListRaw: number[] = this.sortedUniqueList(poemList, 0)
+		const yUniqueCoordListRaw: number[] = this.sortedUniqueList(poemList, 1)
+		const zUniqueCoordListRaw: number[] = this.sortedUniqueList(poemList, 2)
+		const xIndex = xUniqueCoordListRaw.indexOf(startingPoem[0])
+		const yIndex = yUniqueCoordListRaw.indexOf(startingPoem[1])
+		const zIndex = zUniqueCoordListRaw.indexOf(startingPoem[2])
+		const xUniqueCoordList: number[] = xUniqueCoordListRaw.slice(xIndex).concat(xUniqueCoordListRaw.slice(0, xIndex));
+		const yUniqueCoordList: number[] = yUniqueCoordListRaw.slice(yIndex).concat(yUniqueCoordListRaw.slice(0, yIndex));
+		const zUniqueCoordList: number[] = zUniqueCoordListRaw.slice(zIndex).concat(zUniqueCoordListRaw.slice(0, zIndex));
+		
+		let currentAxis: number[] = xUniqueCoordList;
+		const nextAxisDict = {0:yUniqueCoordList, 1:zUniqueCoordList, 2:xUniqueCoordList}
+		const currentAxisDict = {0:xUniqueCoordList, 1:yUniqueCoordList, 2:zUniqueCoordList}
+		let currentAxisNumber = 0
+		const nextAxisNumberDict = {0:1, 1:2, 2:0};
+		let outputList = []
+		let successCounter: number = 0
+		let currentTargetPoem = startingPoem
+		let loopCounter = 0
 
-			const xUniqueCoordListRaw: number[] = this.sortedUniqueList(poemListRaw, 0)
-			const yUniqueCoordListRaw: number[] = this.sortedUniqueList(poemListRaw, 1)
-			const zUniqueCoordListRaw: number[] = this.sortedUniqueList(poemListRaw, 2)
-			const xUniqueCoordList: number[] = xUniqueCoordListRaw.slice(xUniqueCoordListRaw.indexOf(startingPoem[0])).concat(xUniqueCoordListRaw.slice(0, xUniqueCoordListRaw.indexOf(startingPoem[0])));
-			const yUniqueCoordList: number[] = yUniqueCoordListRaw.slice(yUniqueCoordListRaw.indexOf(startingPoem[1])).concat(yUniqueCoordListRaw.slice(0, yUniqueCoordListRaw.indexOf(startingPoem[1])));
-			const zUniqueCoordList: number[] = zUniqueCoordListRaw.slice(zUniqueCoordListRaw.indexOf(startingPoem[2])).concat(zUniqueCoordListRaw.slice(0, zUniqueCoordListRaw.indexOf(startingPoem[2])));
-
-			const nextUniqueDict = {0:yUniqueCoordList, 1:zUniqueCoordList, 2:xUniqueCoordList}
-			let currentUniqueList: number[] = xUniqueCoordList;
-
-			// Changing the inputList to start from the startingPoem and appending the starting poem to output
-			const startingPoemIndex = poemListStr.indexOf(startingPoem.toString());			
-			let poemList = poemListRaw.slice(startingPoemIndex).concat(poemListRaw.slice(0, startingPoemIndex));
-			console.log(poemList);
-					
-			while (successCounter < numOfPoems) {
-					let hasTextVar = true;
-					currentTargetPoem = poemList[indexCounter]
-					console.log(currentTargetPoem);
-					console.log(currentCoord);
-					
-					console.log((currentTargetPoem) && currentTargetPoem[currentCoord] == currentUniqueList[0]);
-					
-					// Checks if the current poem contains the correct coordinate for a given axis
-					// Iterate currentCoord and currentUniqueCoordList
-					if (!outputList.includes(currentTargetPoem) && currentTargetPoem[currentCoord] == currentUniqueList[0]) {
-							const currentPoemName = currentTargetPoem.join('-') + '.json'
-							const poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabaryPoems"), currentPoemName);
-							const poemContent = await this.electronService.readFile(poemPath)
-							const poemJson = JSON.parse(poemContent.toString());   
-							const contentJson = poemJson['poem'];
-							if (contentJson['title'] === null) {
-									contentJson['title'] = 'Untitled';
-							}
-							if (contentJson['text'] === null) {
-									hasTextVar = false;
-							}
-							outputTemplateList.push({
-							"code": currentTargetPoem.join('-'),
-							"title": contentJson['title'],
-							"text": contentJson['text'],
-							"hasText": hasTextVar,
-					})
-							poemList = poemList.slice(indexCounter).concat(poemList.slice(0, indexCounter));
-							indexCounter = 0
-							currentCoord = nextCoordDict[currentCoord]							
-							currentUniqueList = currentUniqueList.slice(1).concat(currentUniqueList.slice(0, 1));
-							currentUniqueList = nextUniqueDict[currentCoord]
-							const currentUniqueListCoord = currentUniqueList.indexOf(poemList[indexCounter][currentCoord]);
-							currentUniqueList = currentUniqueList.slice(currentUniqueListCoord + 1).concat(currentUniqueList.slice(0, currentUniqueListCoord + 1));
-							successCounter++;
-					}
-					indexCounter++;					
-			}		
-			console.log(outputTemplateList);
+		console.log(xUniqueCoordList);
+		console.log(yUniqueCoordList);
+		console.log(zUniqueCoordList);
+		
+		while (successCounter < numOfPoems) {
+			currentTargetPoem[currentAxisNumber] = currentAxis[loopCounter]	
+			console.log("NEXT");
+			console.log(currentAxisNumber);
+			console.log(currentAxis);				
+			console.log(currentTargetPoem);
+			
+			if (!this.checkArrIn2dMatrix(outputList, currentTargetPoem) && this.checkArrIn2dMatrix(poemList, currentTargetPoem)) {
+				outputList.push(currentTargetPoem.slice(0));
+				console.log("SUCCESSFUL");
 				
-			const zip = new PizZip(docTemplate);
-			const doc = new Docxtemplater(zip, {parser: this.parser});
-			const finalOutputData = {'poemList': outputTemplateList};
-			doc.setData(finalOutputData);
-			doc.render()
-			const buf = doc.getZip().generate({type: 'nodebuffer'});
-			const templatePath = resolve(__dirname, '../../syllabary-poems_' + numOfPoems + '_' + startingPoem.join('-') + '.docx')
-			return outputTemplateList
-			// this.electronService.writeFile(templatePath, buf);
-}
+				loopCounter = 1;
+				currentAxis = nextAxisDict[currentAxisNumber]
+				currentAxisNumber = nextAxisNumberDict[currentAxisNumber]
+				const currentIndex = currentAxis.indexOf(startingPoem[currentAxisNumber])
+				currentAxis = currentAxis.slice(currentIndex).concat(currentAxis.slice(0, currentIndex));
+				successCounter++
+			} else if (currentTargetPoem[currentAxisNumber] == currentAxis[currentAxis.length - 1]){
+				currentTargetPoem[nextAxisNumberDict[currentAxisNumber]] += 1
+				loopCounter = 0
+			} else {
+				loopCounter++
+			}
+		}
+		console.log(outputList.map((poemCode) => String(poemCode)));	
+		return outputList
+	}
+
+	public checkArrIn2dMatrix(matrix, testArr) {
+		const matrixStr = matrix.map((poemCode) => String(poemCode));	
+		return matrixStr.includes(testArr.toString())
+	}
+
+// 	public async readWritePoems(poemListRaw: number[][], startingPoem: number[], numOfPoems: number, poemOrder: string, docTemplate: string[]) {
+// 			// Initialising startup variables
+// 			let successCounter: number = 0;
+// 			let indexCounter: number = 0;
+// 			let currentTargetPoem: number[];
+// 			let currentCoord: number = 0;
+// 			const outputTemplateList = [];
+// 			const outputList: number[][] = [];
+// 			const nextCoordDict= {0:1, 1:2, 2:0};
+// 			const poemListStr = poemListRaw.map((poemCode) => String(poemCode));
+
+// 			const xUniqueCoordListRaw: number[] = this.sortedUniqueList(poemListRaw, 0)
+// 			const yUniqueCoordListRaw: number[] = this.sortedUniqueList(poemListRaw, 1)
+// 			const zUniqueCoordListRaw: number[] = this.sortedUniqueList(poemListRaw, 2)
+// 			const xUniqueCoordList: number[] = xUniqueCoordListRaw.slice(xUniqueCoordListRaw.indexOf(startingPoem[0])).concat(xUniqueCoordListRaw.slice(0, xUniqueCoordListRaw.indexOf(startingPoem[0])));
+// 			const yUniqueCoordList: number[] = yUniqueCoordListRaw.slice(yUniqueCoordListRaw.indexOf(startingPoem[1])).concat(yUniqueCoordListRaw.slice(0, yUniqueCoordListRaw.indexOf(startingPoem[1])));
+// 			const zUniqueCoordList: number[] = zUniqueCoordListRaw.slice(zUniqueCoordListRaw.indexOf(startingPoem[2])).concat(zUniqueCoordListRaw.slice(0, zUniqueCoordListRaw.indexOf(startingPoem[2])));
+
+// 			const nextUniqueDict = {0:yUniqueCoordList, 1:zUniqueCoordList, 2:xUniqueCoordList}
+// 			let currentUniqueList: number[] = xUniqueCoordList;
+
+// 			// Changing the inputList to start from the startingPoem and appending the starting poem to output
+// 			const startingPoemIndex = poemListStr.indexOf(startingPoem.toString());			
+// 			let poemList = poemListRaw.slice(startingPoemIndex).concat(poemListRaw.slice(0, startingPoemIndex));
+// 			console.log(poemList);
+					
+// 			while (successCounter < numOfPoems) {
+// 					let hasTextVar = true;
+// 					currentTargetPoem = poemList[indexCounter]
+// 					console.log(currentTargetPoem);
+// 					console.log(currentCoord);
+					
+// 					console.log((currentTargetPoem) && currentTargetPoem[currentCoord] == currentUniqueList[0]);
+					
+// 					// Checks if the current poem contains the correct coordinate for a given axis
+// 					// Iterate currentCoord and currentUniqueCoordList
+// 					if (!outputList.includes(currentTargetPoem) && currentTargetPoem[currentCoord] == currentUniqueList[0]) {
+// 							const currentPoemName = currentTargetPoem.join('-') + '.json'
+// 							const poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabaryPoems"), currentPoemName);
+// 							const poemContent = await this.electronService.readFile(poemPath)
+// 							const poemJson = JSON.parse(poemContent.toString());   
+// 							const contentJson = poemJson['poem'];
+// 							if (contentJson['title'] === null) {
+// 									contentJson['title'] = 'Untitled';
+// 							}
+// 							if (contentJson['text'] === null) {
+// 									hasTextVar = false;
+// 							}
+// 							outputTemplateList.push({
+// 							"code": currentTargetPoem.join('-'),
+// 							"title": contentJson['title'],
+// 							"text": contentJson['text'],
+// 							"hasText": hasTextVar,
+// 					})
+// 							poemList = poemList.slice(indexCounter).concat(poemList.slice(0, indexCounter));
+// 							indexCounter = 0
+// 							currentCoord = nextCoordDict[currentCoord]							
+// 							currentUniqueList = currentUniqueList.slice(1).concat(currentUniqueList.slice(0, 1));
+// 							currentUniqueList = nextUniqueDict[currentCoord]
+// 							const currentUniqueListCoord = currentUniqueList.indexOf(poemList[indexCounter][currentCoord]);
+// 							currentUniqueList = currentUniqueList.slice(currentUniqueListCoord + 1).concat(currentUniqueList.slice(0, currentUniqueListCoord + 1));
+// 							successCounter++;
+// 					}
+// 					indexCounter++;					
+// 			}		
+// 			console.log(outputTemplateList);
+// 			const outputPoemList = outputTemplateList.map(poemCode => poemCode["code"]); 
+// 			console.log(outputPoemList);
+			
+// 			const zip = new PizZip(docTemplate);
+// 			const doc = new Docxtemplater(zip, {parser: this.parser});
+// 			const finalOutputData = {'poemList': outputTemplateList};
+// 			doc.setData(finalOutputData);
+// 			doc.render()
+// 			const buf = doc.getZip().generate({type: 'nodebuffer'});
+// 			const templatePath = resolve(__dirname, '../../syllabary-poems_' + numOfPoems + '_' + startingPoem.join('-') + '.docx')
+// 			// this.electronService.writeFile(templatePath, buf);
+// }
 
 	email = new FormControl('', [Validators.required, Validators.email]);
 
