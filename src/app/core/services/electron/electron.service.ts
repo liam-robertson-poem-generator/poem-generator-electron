@@ -47,12 +47,12 @@ export class ElectronService {
     });
   }
 
-  async readFile(filePath) {
+  async readFile(filePath, format) {
     return new Promise<string[]>((resolve, reject) => {      
       this.ipcRenderer.once("readFileResponse", (event, fileContent) => {
         resolve(fileContent);
       });
-      this.ipcRenderer.send("readFile", filePath);
+      this.ipcRenderer.send("readFile", filePath, format);
     });
   }
 

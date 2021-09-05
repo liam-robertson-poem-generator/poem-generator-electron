@@ -99,8 +99,15 @@ ipcMain.on("getDirectory", (event, dirPath) => {
   win.webContents.send("getDirectoryResponse", files);
 });  
 
-ipcMain.on("readFile", (event, filePath) => {
-  const fileContent = fs.readFileSync(filePath, {encoding:'utf8', flag:'r'});  
+ipcMain.on("readFile", (event, filePath, format) => {
+  let fileContent: any
+  if (format == '') {
+    fileContent = fs.readFile(filePath, (err, data) => {
+      console.log(data);
+    });  
+  } else {
+    fileContent = fs.readFileSync(filePath, format); 
+  }
   win.webContents.send("readFileResponse", fileContent);
 });
 

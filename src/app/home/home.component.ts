@@ -8,7 +8,7 @@ const expressions = require('angular-expressions');
 const PizZip = require('pizzip');
 const Docxtemplater = require('docxtemplater');
 import assign from "lodash/assign";
-import { resolve } from 'path';
+import { join, resolve } from 'path';
 
 @Component({
 	selector: 'app-home',
@@ -21,6 +21,7 @@ export class HomeComponent implements OnInit {
 	public successBool = false;
 	public optionsInt: number[][];
 	public options: string[];
+	public templatePath: string;
 	filteredOptions: Observable<string[]>;
 	public poemListRaw: any;
 	public poemList: number[][];
@@ -37,12 +38,16 @@ export class HomeComponent implements OnInit {
 		poemOrderControl: new FormControl(''),
 		numOfPoemsControl: new FormControl('', [Validators.min(0), Validators.max(2268)])
 	});
+	templateList: Promise<any[]>;
 
 	constructor(private router: Router, private electronService: ElectronService, private fb: FormBuilder) {  
 	}
 	async ngOnInit() {
 		this.poemListPath = resolve(__dirname, "../../../../../../src/assets/syllabaryPoems")   
-		this.poemListRaw = await this.electronService.getDirectory(this.poemListPath)			
+		this.templatePath = resolve(__dirname, "../../../../../../src/assets/poetry-template.docx") 
+		this.poemListRaw = await this.electronService.getDirectory(this.poemListPath)	
+		this.docTemplate = await this.electronService.readFile(this.templatePath, '')	
+				
 		this.poemList = this.refinePoemList(this.poemListRaw)
 		
 		this.poemListSorted = this.sortByMultipleValues(this.poemList);		
@@ -64,14 +69,16 @@ export class HomeComponent implements OnInit {
 		this.numOfPoems = this.poemFormGroup.value.numOfPoemsControl
 		this.poemOrder = this.poemFormGroup.value.poemOrderControl
 
-		this.finalPoemList = this.readWritePoems(this.poemListSorted, this.startingPoem, this.numOfPoems, this.poemOrder)
+		this.finalPoemList = this.iterateBySyllables(this.poemListSorted, this.startingPoem, this.numOfPoems, this.poemOrder)
 		console.log(this.finalPoemList);
+		this.templateList = this.createTemplateList(this.finalPoemList)
+		this.writeDocument(this.templateList, this.docTemplate)
 
 		this.loadingBool = false;
 		this.successBool = true;
 	}
 
-	public readWritePoems(poemList: number[][], startingPoem: number[], numOfPoems: number, poemOrder: string) {
+	public iterateBySyllables(poemList: number[][], startingPoem: number[], numOfPoems: number, poemOrder: string) {
 		console.log("startingPoem: " + startingPoem);
 		console.log("numOfPoems: " + numOfPoems);
 
@@ -122,8 +129,74 @@ export class HomeComponent implements OnInit {
 		return matrixStr.includes(testArr.toString())
 	}
 
+	public async createTemplateList(poemList: string[]) {
+		const outputList = [];
+		for (let index = 0; index < poemList.length; index++) {
+			const currentTargetPoem = poemList[index]
+			let hasTextVar = true;
+			const currentPoemName = poemList[index] + '.json'
+			const poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabaryPoems"), currentPoemName);
+			const poemContent = await this.electronService.readFile(poemPath, {encoding:'utf8', flag:'r'})
+			const poemJson = JSON.parse(poemContent.toString());   
+			const contentJson = poemJson['poem'];
+			if (contentJson['title'] === null) {
+					contentJson['title'] = 'Untitled';
+			}
+			if (contentJson['text'] === null) {
+					hasTextVar = false;
+			}
+			outputList.push({
+			"code": currentTargetPoem,
+			"title": contentJson['title'],
+			"text": contentJson['text'],
+			"hasText": hasTextVar,
+	})}
+		return outputList
+	}
 
-// 	public async readWritePoems(poemListRaw: number[][], startingPoem: number[], numOfPoems: number, poemOrder: string, docTemplate: string[]) {
+	public writeDocument(outputList, docTemplate) {
+		console.log(docTemplate);
+		console.log(outputList);
+		
+		const zip = new PizZip(docTemplate);
+		const doc = new Docxtemplater(zip, {parser: this.parser});
+		const finalOutputData = {'poemList': outputList};
+		doc.setData(finalOutputData);
+		doc.render()
+		const buf = doc.getZip().generate({type: 'nodebuffer'});
+		const outputPath = resolve(__dirname, '../../../../../../src/assets/syllabary-poems_' + this.numOfPoems + '_' + this.startingPoem + '.docx')
+		this.electronService.writeFile(outputPath, buf);
+	}
+		
+// 		const currentPoemName = currentTargetPoem.join('-') + '.json'
+// 		const poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabaryPoems"), currentPoemName);
+// 		const poemContent = await this.electronService.readFile(poemPath)
+// 		const poemJson = JSON.parse(poemContent.toString());   
+// 		const contentJson = poemJson['poem'];
+// 		if (contentJson['title'] === null) {
+// 				contentJson['title'] = 'Untitled';
+// 		}
+// 		if (contentJson['text'] === null) {
+// 				hasTextVar = false;
+// 		}
+// 		outputTemplateList.push({
+// 		"code": currentTargetPoem.join('-'),
+// 		"title": contentJson['title'],
+// 		"text": contentJson['text'],
+// 		"hasText": hasTextVar,
+// })
+// 		poemList = poemList.slice(indexCounter).concat(poemList.slice(0, indexCounter));
+// 		indexCounter = 0
+// 		currentCoord = nextCoordDict[currentCoord]							
+// 		currentUniqueList = currentUniqueList.slice(1).concat(currentUniqueList.slice(0, 1));
+// 		currentUniqueList = nextUniqueDict[currentCoord]
+// 		const currentUniqueListCoord = currentUniqueList.indexOf(poemList[indexCounter][currentCoord]);
+// 		currentUniqueList = currentUniqueList.slice(currentUniqueListCoord + 1).concat(currentUniqueList.slice(0, currentUniqueListCoord + 1));
+// 		successCounter++;
+// }
+
+
+// 	public async iterateBySyllables(poemListRaw: number[][], startingPoem: number[], numOfPoems: number, poemOrder: string, docTemplate: string[]) {
 // 			// Initialising startup variables
 // 			let successCounter: number = 0;
 // 			let indexCounter: number = 0;
