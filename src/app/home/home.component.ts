@@ -8,8 +8,7 @@ const expressions = require('angular-expressions');
 const PizZip = require('pizzip');
 const Docxtemplater = require('docxtemplater');
 import assign from "lodash/assign";
-import { join, resolve } from 'path';
-import { equal } from 'assert/strict';
+import { resolve } from 'path';
 
 @Component({
 	selector: 'app-home',
@@ -17,44 +16,65 @@ import { equal } from 'assert/strict';
 	styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
-	myControl = new FormControl();
+	public formBool = true;
+	public loadingBool = false;
+	public successBool = false;
 	public optionsInt: number[][];
 	public options: string[];
 	filteredOptions: Observable<string[]>;
 	public poemListRaw: any;
 	public poemList: number[][];
 	public poemListSorted: number[][];
-	public startingPoemStr: string;
 	public startingPoem: number[];
 	public poemListPath: string;
 	docTemplate: string[];
-	numberFormControl: FormControl;
+	yourVariable: any;
+	numOfPoems: any;
+	poemOrder: any;
+	finalPoemList: string[];
+	poemFormGroup = new FormGroup ({
+		startingPoemControl: new FormControl(''),
+		poemOrderControl: new FormControl(''),
+		numOfPoemsControl: new FormControl('', [Validators.min(0), Validators.max(2268)])
+	});
 
-	constructor(private router: Router, private electronService: ElectronService) {  
+	constructor(private router: Router, private electronService: ElectronService, private fb: FormBuilder) {  
 	}
 	async ngOnInit() {
 		this.poemListPath = resolve(__dirname, "../../../../../../src/assets/syllabaryPoems")   
-		this.startingPoemStr = "15-3-18"
-		this.startingPoem = this.startingPoemStr.split('-').map((coord) => parseInt(coord));
 		this.poemListRaw = await this.electronService.getDirectory(this.poemListPath)			
 		this.poemList = this.refinePoemList(this.poemListRaw)
-		this.numberFormControl = new FormControl('', [
-			Validators.min(0),
-			Validators.max(this.poemList.length),
-		 ]);
+		
 		this.poemListSorted = this.sortByMultipleValues(this.poemList);		
-
 		this.optionsInt = this.poemListSorted;
 		this.options = this.optionsInt.map(value => value.join("-").toString())
-		this.filteredOptions = this.myControl.valueChanges
-		.pipe(
-			startWith(''), 
-			map(value => this._filter(value))
-		);
-		this.readWritePoems(this.poemListSorted, this.startingPoem, 20, "forwards")
-}
+		this.filteredOptions = this.poemFormGroup.get('startingPoemControl').valueChanges
+      .pipe(
+        startWith(''),
+        map(val => this._filter(val))
+      );
+	}
+
+	public execute() {
+		this.formBool = false;
+		this.loadingBool = true;
+
+		const startingPoemRaw: string = this.poemFormGroup.value.startingPoemControl
+		this.startingPoem = startingPoemRaw.split('-').map(coord => parseInt(coord))
+		this.numOfPoems = this.poemFormGroup.value.numOfPoemsControl
+		this.poemOrder = this.poemFormGroup.value.poemOrderControl
+
+		this.finalPoemList = this.readWritePoems(this.poemListSorted, this.startingPoem, this.numOfPoems, this.poemOrder)
+		console.log(this.finalPoemList);
+
+		this.loadingBool = false;
+		this.successBool = true;
+	}
 
 	public readWritePoems(poemList: number[][], startingPoem: number[], numOfPoems: number, poemOrder: string) {
+		console.log("startingPoem: " + startingPoem);
+		console.log("numOfPoems: " + numOfPoems);
+
 		const xUniqueCoordListRaw: number[] = this.sortedUniqueList(poemList, 0)
 		const yUniqueCoordListRaw: number[] = this.sortedUniqueList(poemList, 1)
 		const zUniqueCoordListRaw: number[] = this.sortedUniqueList(poemList, 2)
@@ -75,21 +95,11 @@ export class HomeComponent implements OnInit {
 		let currentTargetPoem = startingPoem
 		let loopCounter = 0
 
-		console.log(xUniqueCoordList);
-		console.log(yUniqueCoordList);
-		console.log(zUniqueCoordList);
-		
 		while (successCounter < numOfPoems) {
 			currentTargetPoem[currentAxisNumber] = currentAxis[loopCounter]	
-			console.log("NEXT");
-			console.log(currentAxisNumber);
-			console.log(currentAxis);				
-			console.log(currentTargetPoem);
 			
 			if (!this.checkArrIn2dMatrix(outputList, currentTargetPoem) && this.checkArrIn2dMatrix(poemList, currentTargetPoem)) {
-				outputList.push(currentTargetPoem.slice(0));
-				console.log("SUCCESSFUL");
-				
+				outputList.push(currentTargetPoem.slice(0));				
 				loopCounter = 1;
 				currentAxis = nextAxisDict[currentAxisNumber]
 				currentAxisNumber = nextAxisNumberDict[currentAxisNumber]
@@ -103,14 +113,15 @@ export class HomeComponent implements OnInit {
 				loopCounter++
 			}
 		}
-		console.log(outputList.map((poemCode) => String(poemCode)));	
-		return outputList
+		const finalOutputList = outputList.map(value => value.join("-").toString())
+		return finalOutputList
 	}
 
 	public checkArrIn2dMatrix(matrix, testArr) {
 		const matrixStr = matrix.map((poemCode) => String(poemCode));	
 		return matrixStr.includes(testArr.toString())
 	}
+
 
 // 	public async readWritePoems(poemListRaw: number[][], startingPoem: number[], numOfPoems: number, poemOrder: string, docTemplate: string[]) {
 // 			// Initialising startup variables
@@ -237,10 +248,10 @@ export class HomeComponent implements OnInit {
 	return inputPoemListInt
 	}
 	
-	public _filter(value: string) {
-		const filterValue = value.toLowerCase();
-		return this.options.filter(option => option.toLowerCase().includes(filterValue));
-	}
+	_filter(val: string): string[] {
+    return this.options.filter(option =>
+      option.toLowerCase().indexOf(val.toLowerCase()) === 0);
+  }
 
 	
 	public angularParser(tag: string) {

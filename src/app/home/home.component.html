@@ -4,40 +4,50 @@
     <title>Syllabary Poem Generator</title>
 </head>
 <body>
-    <div class='main-container'>
+    <div class='main-container' *ngIf=formBool>
         <h1>Syllabary Poem Generator</h1>
-        <div class='content-container'>
-            <form class="example-form">
-                <mat-form-field  hintLabel= "Max {{poemList.length}} poems" class="example-full-width" appearance="fill">
-                    <mat-label>How many poems do you want to generate?</mat-label>
-                    <input matInput type="number" [formControl]="numberFormControl" required>
-                </mat-form-field>
-                <mat-form-field class="example-dropdown" appearance="fill">
-                    <mat-label>What poem do you want to select?</mat-label>
-                    <input type="text"
-                        placeholder="Pick one"
-                        aria-label="Number"
-                        matInput
-                        [formControl]="myControl"
-                        [matAutocomplete]="auto" required>
-                    <mat-autocomplete #auto="matAutocomplete">
-                    <mat-option *ngFor="let option of filteredOptions | async" [value]="option">
-                        {{option}}
-                    </mat-option>
-                    </mat-autocomplete>
-                </mat-form-field>
-                <mat-form-field appearance="fill" class="example-dropdown" >
-                    <mat-label>Do you want to start or end on this poem?</mat-label>
-                    <select matNativeControl required>
-                        <option value="start">Start</option>
-                        <option value="end">End</option>
-                    </select>
-                </mat-form-field>
-            </form>
-            <div class="example-button-row">
-                <button mat-raised-button>Submit</button>
-            </div>
+        <form [formGroup]="poemFormGroup" class="example-form">
+            <mat-form-field class="example-full-width" appearance="fill">
+                <mat-label>How many poems do you want to generate?</mat-label>
+                <input 
+                    matInput type="number"  
+                    formControlName="numOfPoemsControl"
+                    required>
+            </mat-form-field>
+            <mat-form-field class="example-dropdown" appearance="fill">
+                <mat-label>What poem do you want to select?</mat-label>
+                <input 
+                    type="text"
+                    placeholder="Pick one"
+                    aria-label="Number"
+                    matInput
+                    formControlName="startingPoemControl"
+                    [matAutocomplete]="auto" required> 
+                <mat-autocomplete #auto="matAutocomplete">
+                <mat-option *ngFor="let option of filteredOptions | async" [value]="option">
+                    {{option}}
+                </mat-option>
+                </mat-autocomplete>
+            </mat-form-field>
+            <mat-form-field appearance="fill" class="example-dropdown" >
+                <mat-label>Do you want to start or end on this poem?</mat-label>
+                <select matNativeControl formControlName="poemOrderControl" required>
+                    <option value="start">Start</option>
+                    <option value="end">End</option>
+                </select>
+            </mat-form-field>
+        </form>
+        <div class="example-button-row">
+            <button type="submit" mat-raised-button (click)="execute()" [disabled]="!poemFormGroup.valid">Submit</button>
         </div>
+    </div>
+    <div class="progress-bar" *ngIf=loadingBool>
+        <h1>Loading...</h1>
+        <mat-progress-bar class="progress-bar-mat" mode="indeterminate"></mat-progress-bar>
+    </div>
+    <div class="success-container" *ngIf=successBool>
+        <h1>Success</h1>
+        <h1>Document has been stored in your downloads folder</h1>
     </div>
 </body>
 </html>

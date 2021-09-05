@@ -52,8 +52,9 @@ describe('HomeComponent', () => {
   });
 
   it('should iterate through syllables one at a time', fakeAsync(() => {
-    const actualOutput1 = component.readWritePoems(randomFullPoemList, [15,3,18], 20, "forwards")
-    const actualOutput2 = component.readWritePoems(randomFullPoemList, [1,5,1], 2268, "forwards")
+    const actualOutput1 = component.readWritePoems(randomFullPoemList, [15,3,18], 20, "start")
+    const actualOutput2 = component.readWritePoems(randomFullPoemList, [1,5,1], 2268, "start")
+    const actualOutput3 = component.readWritePoems(randomFullPoemList, [17,2,8], 25, "end")
     const expectedIterated1 = [[15,3,18], [15,7,18], [15,7,8], [16,7,8], [16,8,8], [16,8,9], [17,8,9], [17,9,9], [17,9,10], [18,9,10], [18,10,10], [18,10,11], [19,10,11], [19,1,11], [19,1,12], [20,1,12], [20,2,12], [20,2,13], [2,2,13], [2,3,13]];
 
     expect(expectedIterated1).toEqual(actualOutput1);      
