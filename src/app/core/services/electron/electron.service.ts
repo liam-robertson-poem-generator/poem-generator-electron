@@ -58,7 +58,7 @@ export class ElectronService {
 
   async writeFile(filePath, buf) {
     return new Promise<string[]>((resolve, reject) => {
-      this.ipcRenderer.once("writeFileResponse", (event, fileContent) => {
+      this.ipcRenderer.once("writeFileResponse", (event, fileContent) => {        
         resolve(fileContent);
       });
       this.ipcRenderer.send("writeFile", filePath, buf);

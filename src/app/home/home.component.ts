@@ -4,10 +4,7 @@ import { FormControl, Validators, FormBuilder, FormGroup } from '@angular/forms'
 import { Observable } from 'rxjs';
 import { ElectronService } from "../core/services/electron/electron.service";
 import { map, startWith } from 'rxjs/operators';
-const expressions = require('angular-expressions');
-const PizZip = require('pizzip');
-const Docxtemplater = require('docxtemplater');
-import assign from "lodash/assign";
+import { Document, ImageRun, Packer, PageBreak, Paragraph, TextRun } from "docx";
 import { join, resolve } from 'path';
 
 @Component({
@@ -28,7 +25,6 @@ export class HomeComponent implements OnInit {
 	public poemListSorted: number[][];
 	public startingPoem: number[];
 	public poemListPath: string;
-	docTemplate: string[];
 	yourVariable: any;
 	numOfPoems: any;
 	poemOrder: any;
@@ -38,15 +34,14 @@ export class HomeComponent implements OnInit {
 		poemOrderControl: new FormControl(''),
 		numOfPoemsControl: new FormControl('', [Validators.min(0), Validators.max(2268)])
 	});
-	templateList: Promise<any[]>;
+	templateList: any[];
 
 	constructor(private router: Router, private electronService: ElectronService, private fb: FormBuilder) {  
 	}
 	async ngOnInit() {
-		this.poemListPath = resolve(__dirname, "../../../../../../src/assets/syllabaryPoems")   
+		this.poemListPath = resolve(__dirname, "../../../../../../src/assets/syllabary-poems")   
 		this.templatePath = resolve(__dirname, "../../../../../../src/assets/poetry-template.docx") 
 		this.poemListRaw = await this.electronService.getDirectory(this.poemListPath)	
-		this.docTemplate = await this.electronService.readFile(this.templatePath, '')	
 				
 		this.poemList = this.refinePoemList(this.poemListRaw)
 		
@@ -60,7 +55,7 @@ export class HomeComponent implements OnInit {
       );
 	}
 
-	public execute() {
+	public async execute() {
 		this.formBool = false;
 		this.loadingBool = true;
 
@@ -71,8 +66,8 @@ export class HomeComponent implements OnInit {
 
 		this.finalPoemList = this.iterateBySyllables(this.poemListSorted, this.startingPoem, this.numOfPoems, this.poemOrder)
 		console.log(this.finalPoemList);
-		this.templateList = this.createTemplateList(this.finalPoemList)
-		this.writeDocument(this.templateList, this.docTemplate)
+		this.templateList = await this.createTemplateList(this.finalPoemList)
+		this.writeDocument(this.templateList)
 
 		this.loadingBool = false;
 		this.successBool = true;
@@ -129,14 +124,31 @@ export class HomeComponent implements OnInit {
 		return matrixStr.includes(testArr.toString())
 	}
 
+	// const poemGlyph = await this.electronService.readFile(join(resolve(__dirname, "../../../../../../src/assets/syllabary-glyphs"), poemList[index] + '.png'))
+			// const poemImage = new ImageRun({
+			// 	data: poemGlyph,
+			// 	transformation: {
+			// 		width: 200,
+			// 		height: 200,
+			// 	},
+			// 	floating: {
+			// 		horizontalPosition: {
+			// 			offset: 1014400,
+			// 		},
+			// 		verticalPosition: {
+			// 			offset: 1014400,
+			// 		},
+			// 	},
+			// });
+
 	public async createTemplateList(poemList: string[]) {
 		const outputList = [];
-		for (let index = 0; index < poemList.length; index++) {
+		for (let index = 0; index < poemList.length; index++) {			
 			const currentTargetPoem = poemList[index]
 			let hasTextVar = true;
 			const currentPoemName = poemList[index] + '.json'
-			const poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabaryPoems"), currentPoemName);
-			const poemContent = await this.electronService.readFile(poemPath, {encoding:'utf8', flag:'r'})
+			const poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-poems"), currentPoemName);			
+			const poemContent = await this.electronService.readFile(poemPath, {encoding:'utf8', flag:'r'})			
 			const poemJson = JSON.parse(poemContent.toString());   
 			const contentJson = poemJson['poem'];
 			if (contentJson['title'] === null) {
@@ -150,26 +162,39 @@ export class HomeComponent implements OnInit {
 			"title": contentJson['title'],
 			"text": contentJson['text'],
 			"hasText": hasTextVar,
-	})}
+	})}	
 		return outputList
 	}
 
-	public writeDocument(outputList, docTemplate) {
-		console.log(docTemplate);
-		console.log(outputList);
+	public writeDocument(outputList) {
+		const docContentList = [];
+		for (let index = 0; index < outputList.length; index++) {
+			let tempVar = 
+				new Paragraph({
+					children: [ 
+						new TextRun({text: outputList[index]["title"], font: "Arial", size: 40}),
+						new TextRun({text: " (" + outputList[index]["code"] + ")", font: "Arial", size: 40}),
+						new TextRun({text: outputList[index]["text"], font: "Arial", size: 30, break: 2}),
+					],
+					pageBreakBefore: true,
+				})
+			docContentList.push(tempVar)
+		}
+
+		const doc = new Document({
+			sections: [{
+				properties: {},
+				children: docContentList,
+			}]
+		});
 		
-		const zip = new PizZip(docTemplate);
-		const doc = new Docxtemplater(zip, {parser: this.parser});
-		const finalOutputData = {'poemList': outputList};
-		doc.setData(finalOutputData);
-		doc.render()
-		const buf = doc.getZip().generate({type: 'nodebuffer'});
-		const outputPath = resolve(__dirname, '../../../../../../src/assets/syllabary-poems_' + this.numOfPoems + '_' + this.startingPoem + '.docx')
-		this.electronService.writeFile(outputPath, buf);
+		Packer.toBuffer(doc).then((buffer) => {
+			this.electronService.writeFile(resolve(__dirname, "../../../../../../src/assets/myDoc.docx"), buffer)
+		});	
 	}
 		
 // 		const currentPoemName = currentTargetPoem.join('-') + '.json'
-// 		const poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabaryPoems"), currentPoemName);
+// 		const poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-poems"), currentPoemName);
 // 		const poemContent = await this.electronService.readFile(poemPath)
 // 		const poemJson = JSON.parse(poemContent.toString());   
 // 		const contentJson = poemJson['poem'];
@@ -234,7 +259,7 @@ export class HomeComponent implements OnInit {
 // 					// Iterate currentCoord and currentUniqueCoordList
 // 					if (!outputList.includes(currentTargetPoem) && currentTargetPoem[currentCoord] == currentUniqueList[0]) {
 // 							const currentPoemName = currentTargetPoem.join('-') + '.json'
-// 							const poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabaryPoems"), currentPoemName);
+// 							const poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-poems"), currentPoemName);
 // 							const poemContent = await this.electronService.readFile(poemPath)
 // 							const poemJson = JSON.parse(poemContent.toString());   
 // 							const contentJson = poemJson['poem'];
@@ -327,45 +352,45 @@ export class HomeComponent implements OnInit {
   }
 
 	
-	public angularParser(tag: string) {
-		if (tag === '.') {
-				return {
-						get: function(s: any){ return s;}
-				};
-		}
-		const expr = expressions.compile(
-				tag.replace(/(’|‘)/g, "'").replace(/(“|”)/g, '"')
-		);
-		return {
-				get: function(scope: any, context: { scopeList: any; num: any; }) {
-						let obj = {};
-						const scopeList = context.scopeList;
-						const num = context.num;
-						for (let i = 0, len = num + 1; i < len; i++) {
-								obj = assign(obj, scopeList[i]);
-						}
-						return expr(scope, obj);
-				}
-		};
-	}
-	public parser(tag: string) {
-	if (tag === "$pageBreakExceptLast") {
-			return {
-					get(scope: any, context: { scopePathLength: string | any[]; scopePathItem: string | any[]; }) {
-							const totalLength = context.scopePathLength[context.scopePathLength.length - 1];
-							const index = context.scopePathItem[context.scopePathItem.length - 1];
-							const isLast = index === totalLength - 1;
-							if (!isLast) {
-									return '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
-							}
-							else {
-									return '';
-							}
-					}
-			}
-	}
-	return this.angularParser(tag);
-}
+// 	public angularParser(tag: string) {
+// 		if (tag === '.') {
+// 				return {
+// 						get: function(s: any){ return s;}
+// 				};
+// 		}
+// 		const expr = expressions.compile(
+// 				tag.replace(/(’|‘)/g, "'").replace(/(“|”)/g, '"')
+// 		);
+// 		return {
+// 				get: function(scope: any, context: { scopeList: any; num: any; }) {
+// 						let obj = {};
+// 						const scopeList = context.scopeList;
+// 						const num = context.num;
+// 						for (let i = 0, len = num + 1; i < len; i++) {
+// 								obj = assign(obj, scopeList[i]);
+// 						}
+// 						return expr(scope, obj);
+// 				}
+// 		};
+// 	}
+// 	public parser(tag: string) {
+// 	if (tag === "$pageBreakExceptLast") {
+// 			return {
+// 					get(scope: any, context: { scopePathLength: string | any[]; scopePathItem: string | any[]; }) {
+// 							const totalLength = context.scopePathLength[context.scopePathLength.length - 1];
+// 							const index = context.scopePathItem[context.scopePathItem.length - 1];
+// 							const isLast = index === totalLength - 1;
+// 							if (!isLast) {
+// 									return '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+// 							}
+// 							else {
+// 									return '';
+// 							}
+// 					}
+// 			}
+// 	}
+// 	return this.angularParser(tag);
+// }
 	
 		
 

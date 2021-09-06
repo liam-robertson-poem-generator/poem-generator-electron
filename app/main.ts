@@ -100,14 +100,7 @@ ipcMain.on("getDirectory", (event, dirPath) => {
 });  
 
 ipcMain.on("readFile", (event, filePath, format) => {
-  let fileContent: any
-  if (format == '') {
-    fileContent = fs.readFile(filePath, (err, data) => {
-      console.log(data);
-    });  
-  } else {
-    fileContent = fs.readFileSync(filePath, format); 
-  }
+  const fileContent = fs.readFileSync(filePath, format); 
   win.webContents.send("readFileResponse", fileContent);
 });
 
