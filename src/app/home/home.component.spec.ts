@@ -51,19 +51,27 @@ describe('HomeComponent', () => {
     expect(sortedUnique3).toEqual(expectedSortedUnique3);
   });
 
-  it('should iterate through syllables one at a time', fakeAsync(() => {
+  it('should iterate through syllables one at a time', () => {
     const actualOutput1 = component.iterateBySyllables(randomFullPoemList, [15,3,18], 20, "start")
-    const actualOutput2 = component.iterateBySyllables(randomFullPoemList, [1,5,1], 2268, "start")
-    const actualOutput3 = component.iterateBySyllables(randomFullPoemList, [17,2,8], 25, "end")
-    const expectedIterated1 = [[15,3,18], [15,7,18], [15,7,8], [16,7,8], [16,8,8], [16,8,9], [17,8,9], [17,9,9], [17,9,10], [18,9,10], [18,10,10], [18,10,11], [19,10,11], [19,1,11], [19,1,12], [20,1,12], [20,2,12], [20,2,13], [2,2,13], [2,3,13]];
-    const expectedIterated3 = [[2,3,13], [2,2,13], [20,2,13], [20,2,12], [20,1,12], [19,1,12], [19,1,11], [19,10,11], [18,10,11], [18,10,10], [18,9,10], [17,9,10], [17,9,9], [17,8,9], [16,8,9], [16,8,8], [16,7,8], [15,7,8], [15,7,18], [15,3,18]];
+    const actualOutput2 = component.iterateBySyllables(randomFullPoemList, [15,3,18], 20, "end")
+    const actualOutput3 = component.iterateBySyllables(randomFullPoemList, [14,4,4], 2268, "end")
+    const actualOutput4 = component.iterateBySyllables(randomFullPoemList, [19,7,4], 20, "start")
+    const actualOutput5 = component.iterateBySyllables(randomFullPoemList, [20,10,7], 20, "end")
+
+    const expectedIterated1 = ["15-3-18", "15-7-18", "15-7-8", "16-7-8", "16-8-8", "16-8-9", "17-8-9", "17-9-9", "17-9-10", "18-9-10", "18-10-10", "18-10-11", "19-10-11", "19-1-11", "19-1-12", "20-1-12", "20-2-12", "20-2-13", "2-2-13", "2-3-13"];
+    const expectedIterated2 = ["2-3-13", "2-2-13", "20-2-13", "20-2-12", "20-1-12", "19-1-12", "19-1-11", "19-10-11", "18-10-11", "18-10-10", "18-9-10", "17-9-10", "17-9-9", "17-8-9", "16-8-9", "16-8-8", "16-7-8", "15-7-8", "15-7-18", "15-3-18"];
+    const expectedIterated4 = ["19-7-4", "19-8-4", "19-8-5", "20-8-5", "20-9-5", "20-9-6", "2-9-6", "2-4-6", "2-4-7", "4-4-7", "4-5-7", "4-5-8", "5-5-8", "5-7-8", "5-7-9", "6-7-9", "6-8-9", "6-8-10", "8-8-10", "8-9-10"];
+    const expectedIterated5 = ["6-8-13", "6-7-13", "5-7-13", "5-7-12", "5-6-12", "4-6-12", "4-6-11", "4-5-11", "3-5-11", "3-5-10", "3-4-10", "2-4-10", "2-4-9", "2-3-9", "1-3-9", "1-3-8", "1-2-8", "20-2-8", "20-2-7", "20-10-7"];
 
     expect(expectedIterated1).toEqual(actualOutput1);      
-    expect(expectedIterated1.length).toEqual(20);   
-    expect(actualOutput2.length).toEqual(2268);   
-  }));
+    expect(actualOutput1.length).toEqual(20);   
+    expect(expectedIterated2).toEqual(actualOutput2); 
+    expect(actualOutput3.length).toEqual(2268);   
+    expect(expectedIterated4).toEqual(actualOutput4); 
+    expect(expectedIterated5).toEqual(actualOutput5); 
+  });
 
-  const randomPoemList3 = 
+  const randomPoemList3 =  
   [ [ 11, 4, 2 ],
   [ 8, 2, 4 ],
   [ 14, 4, 4 ],

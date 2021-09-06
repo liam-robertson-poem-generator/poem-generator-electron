@@ -46,8 +46,12 @@
         <mat-progress-bar class="progress-bar-mat" mode="indeterminate"></mat-progress-bar>
     </div>
     <div class="success-container" *ngIf=successBool>
-        <h1>Success</h1>
-        <h1>Document has been stored in your downloads folder</h1>
+        <h1>Success!</h1>
+        <h1>Document is stored in location:</h1>
+        <h3>{{outputPath}}</h3>
+        <div class="example-button-row">
+            <button type="submit" mat-raised-button (click)="backToMain()">Back</button>
+        </div>
     </div>
 </body>
 </html>
