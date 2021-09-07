@@ -103,8 +103,7 @@ export class HomeComponent implements OnInit {
 
 		while (successCounter < numOfPoems) {
 			currentTargetPoem[currentAxisNumber] = currentAxis[loopCounter]	
-			console.log(successCounter);
-			
+			console.log(currentTargetPoem);
 			
 			if (!this.checkArrIn2dMatrix(outputList, currentTargetPoem) && this.checkArrIn2dMatrix(poemList, currentTargetPoem)) {
 				outputList.push(currentTargetPoem.slice(0));				
