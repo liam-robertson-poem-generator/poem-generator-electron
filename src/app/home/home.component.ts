@@ -4,7 +4,7 @@ import { FormControl, Validators, FormBuilder, FormGroup } from '@angular/forms'
 import { Observable } from 'rxjs';
 import { ElectronService } from "../core/services/electron/electron.service";
 import { map, startWith } from 'rxjs/operators';
-import { Document, ImageRun, Packer, PageBreak, Paragraph, TextRun } from "docx";
+import { AlignmentType, Document, HeadingLevel, HorizontalPositionAlign, HorizontalPositionRelativeFrom, ImageRun, Packer, PageBreak, Paragraph, TextRun, TextWrappingSide, TextWrappingType, VerticalPositionRelativeFrom } from "docx";
 import { join, resolve } from 'path';
 
 @Component({
@@ -101,11 +101,24 @@ export class HomeComponent implements OnInit {
 		let currentTargetPoem = startingPoem
 		let loopCounter = 0
 
+		// else if (currentTargetPoem[currentAxisNumber] == currentAxis[currentAxis.length - 1]){
+		// 	if (currentTargetPoem[nextAxisNumberDict[currentAxisNumber]] == nextAxisDict[currentAxisNumber][nextAxisDict[currentAxisNumber].length - 1]) {
+		// 		currentTargetPoem[nextAxisNumberDict[currentAxisNumber] + 1] += 1
+		// 		currentTargetPoem[currentAxisNumber] = currentAxis[0]
+		// 		loopCounter = 0
+		// 	} else {
+		// 		currentTargetPoem[nextAxisNumberDict[currentAxisNumber]] += 1
+		// 		currentTargetPoem[currentAxisNumber] = currentAxis[0]
+		// 		loopCounter = 0
+		// 	}
+		// } 
+
 		while (successCounter < numOfPoems) {
 			currentTargetPoem[currentAxisNumber] = currentAxis[loopCounter]	
 			console.log(currentTargetPoem);
 			
 			if (!this.checkArrIn2dMatrix(outputList, currentTargetPoem) && this.checkArrIn2dMatrix(poemList, currentTargetPoem)) {
+				console.log(successCounter);			
 				outputList.push(currentTargetPoem.slice(0));				
 				loopCounter = 1;
 				currentAxis = nextAxisDict[currentAxisNumber]
@@ -113,9 +126,6 @@ export class HomeComponent implements OnInit {
 				const currentIndex = currentAxis.indexOf(startingPoem[currentAxisNumber])
 				currentAxis = currentAxis.slice(currentIndex).concat(currentAxis.slice(0, currentIndex));
 				successCounter++
-			} else if (currentTargetPoem[currentAxisNumber] == currentAxis[currentAxis.length - 1]){
-				currentTargetPoem[nextAxisNumberDict[currentAxisNumber]] += 1
-				loopCounter = 0
 			} else {
 				loopCounter++
 			}
@@ -123,10 +133,12 @@ export class HomeComponent implements OnInit {
 		if (poemOrder == "end") {
 			outputList = outputList.reverse();
 		}
-		const finalOutputList = outputList.map(value => value.join("-").toString())
-		console.log(finalOutputList);
-		
+		const finalOutputList = outputList.map(value => value.join("-").toString())		
 		return finalOutputList
+	}
+
+	public updateUniqueLists(poemList) {
+		
 	}
 
 	public checkArrIn2dMatrix(matrix, testArr) {
@@ -134,31 +146,18 @@ export class HomeComponent implements OnInit {
 		return matrixStr.includes(testArr.toString())
 	}
 
-	// const poemGlyph = await this.electronService.readFile(join(resolve(__dirname, "../../../../../../src/assets/syllabary-glyphs"), poemList[index] + '.png'))
-			// const poemImage = new ImageRun({
-			// 	data: poemGlyph,
-			// 	transformation: {
-			// 		width: 200,
-			// 		height: 200,
-			// 	},
-			// 	floating: {
-			// 		horizontalPosition: {
-			// 			offset: 1014400,
-			// 		},
-			// 		verticalPosition: {
-			// 			offset: 1014400,
-			// 		},
-			// 	},
-			// });
-
 	public async createTemplateList(poemList: string[]) {
 		const outputList = [];
-		for (let index = 0; index < poemList.length; index++) {			
+		for (let index = 0; index < poemList.length; index++) {		
+
 			const currentTargetPoem = poemList[index]
 			let hasTextVar = true;
 			const currentPoemName = poemList[index] + '.json'
-			const poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-poems"), currentPoemName);			
-			const poemContent = await this.electronService.readFile(poemPath, {encoding:'utf8', flag:'r'})			
+			const currentGlyphName = poemList[index] + '.jpg'
+			const poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-poems"), currentPoemName);		
+			const glyphPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-glyphs-jpg"), currentGlyphName); 
+			const poemGlyph = await this.electronService.readFile(glyphPath, {})	
+			const poemContent = await this.electronService.readFile(poemPath, {encoding:'utf8', flag:'r'})		
 			const poemJson = JSON.parse(poemContent.toString());   
 			const contentJson = poemJson['poem'];
 			if (contentJson['title'] === null) {
@@ -171,24 +170,59 @@ export class HomeComponent implements OnInit {
 			"code": currentTargetPoem,
 			"title": contentJson['title'],
 			"text": contentJson['text'],
+			"glyph": poemGlyph,
 			"hasText": hasTextVar,
-	})}	
+	})}		
 		return outputList
 	}
 
 	public writeDocument(outputList) {
 		const docContentList = [];
-		for (let index = 0; index < outputList.length; index++) {
-			let tempVar = 
+		for (let index = 0; index < outputList.length; index++) { 
+			const poemGlyph = outputList[index]["glyph"]			
+			const poemImage = new ImageRun({
+				data: poemGlyph,
+				transformation: {
+					width: 215,
+					height: 215,
+				},
+				floating: {
+					horizontalPosition: {
+						align: HorizontalPositionAlign.CENTER,
+						offset: 0,
+					},
+					verticalPosition: {
+						relative: VerticalPositionRelativeFrom.PARAGRAPH,
+						offset: 2014400,
+					},
+				},
+			});	
+
+			let currentTitle = 
 				new Paragraph({
 					children: [ 
-						new TextRun({text: outputList[index]["title"], font: "Arial", size: 40}),
-						new TextRun({text: " (" + outputList[index]["code"] + ")", font: "Arial", size: 40}),
-						new TextRun({text: outputList[index]["text"], font: "Arial", size: 30, break: 2}),
+						new TextRun({text: outputList[index]["title"], font: "Underwood Champion", size: 40}),
+						new TextRun({text: " (" + outputList[index]["code"] + ")", font: "Underwood Champion", size: 30}),
 					],
 					pageBreakBefore: true,
+					alignment: AlignmentType.CENTER,
 				})
-			docContentList.push(tempVar)
+
+			let currentText = 
+				new Paragraph({
+					children: [ 
+						new TextRun({text: outputList[index]["text"], font: "Underwood Champion", size: 30, break: 2}),
+					],
+				})
+
+			let currentImage = new Paragraph({
+				children: [
+					poemImage
+				]})
+
+			docContentList.push(currentTitle) 
+			docContentList.push(currentText) 
+			docContentList.push(currentImage) 
 		}
 
 		const doc = new Document({

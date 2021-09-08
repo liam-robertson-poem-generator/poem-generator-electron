@@ -48,7 +48,7 @@
     <div class="success-container" *ngIf=successBool>
         <h1>Success!</h1>
         <h1>Document is stored in location:</h1>
-        <h3>{{outputPath}}</h3>
+        <h3><a href="{{outputPath}}">{{outputPath}}</a></h3>
         <div class="example-button-row">
             <button type="submit" mat-raised-button (click)="backToMain()">Back</button>
         </div>
