@@ -37,6 +37,7 @@ export class HomeComponent implements OnInit {
 	templateList: any[];
 	outputPath: string;
 	startingPoemRaw: any;
+	loopCounter: any;
 
 	constructor(private router: Router, private electronService: ElectronService, private fb: FormBuilder) {  
 	}
@@ -60,6 +61,7 @@ export class HomeComponent implements OnInit {
 	public async execute() {
 		this.formBool = false;
 		this.loadingBool = true;
+		await this.sleep(100);
 
 		this.startingPoemRaw = this.poemFormGroup.value.startingPoemControl
 		this.startingPoem = this.startingPoemRaw.split('-').map(coord => parseInt(coord))
@@ -77,57 +79,59 @@ export class HomeComponent implements OnInit {
 	}
 
 	public iterateBySyllables(poemList: number[][], startingPoem: number[], numOfPoems: number, poemOrder: string) {
-		console.log("poemOrder: " + poemOrder);
-		console.log("startingPoem: " + startingPoem);
-		console.log("numOfPoems: " + numOfPoems);
+		let uniqueCoordList1 = this.updateUniqueLists(poemList, startingPoem)[0]
+		let uniqueCoordList2 = this.updateUniqueLists(poemList, startingPoem)[1]
+		let uniqueCoordList3 = this.updateUniqueLists(poemList, startingPoem)[2]
 
-		const xUniqueCoordListRaw: number[] = this.sortedUniqueList(poemList, 0)
-		const yUniqueCoordListRaw: number[] = this.sortedUniqueList(poemList, 1)
-		const zUniqueCoordListRaw: number[] = this.sortedUniqueList(poemList, 2)
-		const xIndex = xUniqueCoordListRaw.indexOf(startingPoem[0])
-		const yIndex = yUniqueCoordListRaw.indexOf(startingPoem[1])
-		const zIndex = zUniqueCoordListRaw.indexOf(startingPoem[2])
-		const xUniqueCoordList: number[] = xUniqueCoordListRaw.slice(xIndex).concat(xUniqueCoordListRaw.slice(0, xIndex));
-		const yUniqueCoordList: number[] = yUniqueCoordListRaw.slice(yIndex).concat(yUniqueCoordListRaw.slice(0, yIndex));
-		const zUniqueCoordList: number[] = zUniqueCoordListRaw.slice(zIndex).concat(zUniqueCoordListRaw.slice(0, zIndex));
-		
-		let currentAxis: number[] = xUniqueCoordList;
-		const nextAxisDict = {0:yUniqueCoordList, 1:zUniqueCoordList, 2:xUniqueCoordList}
-		const currentAxisDict = {0:xUniqueCoordList, 1:yUniqueCoordList, 2:zUniqueCoordList}
-		let currentAxisNumber = 0
-		const nextAxisNumberDict = {0:1, 1:2, 2:0};
+		let nextAxisNumberDict = {0:1, 1:2, 2:0};
 		let outputList = []
 		let successCounter: number = 0
+		let currentAxisNumber = 0
+		let xLoopCounter = 0
+		let yLoopCounter = 0
+		let zLoopCounter = 0
 		let currentTargetPoem = startingPoem
-		let loopCounter = 0
-
-		// else if (currentTargetPoem[currentAxisNumber] == currentAxis[currentAxis.length - 1]){
-		// 	if (currentTargetPoem[nextAxisNumberDict[currentAxisNumber]] == nextAxisDict[currentAxisNumber][nextAxisDict[currentAxisNumber].length - 1]) {
-		// 		currentTargetPoem[nextAxisNumberDict[currentAxisNumber] + 1] += 1
-		// 		currentTargetPoem[currentAxisNumber] = currentAxis[0]
-		// 		loopCounter = 0
-		// 	} else {
-		// 		currentTargetPoem[nextAxisNumberDict[currentAxisNumber]] += 1
-		// 		currentTargetPoem[currentAxisNumber] = currentAxis[0]
-		// 		loopCounter = 0
-		// 	}
-		// } 
 
 		while (successCounter < numOfPoems) {
-			currentTargetPoem[currentAxisNumber] = currentAxis[loopCounter]	
-			console.log(currentTargetPoem);
+			let axisDict = {0:uniqueCoordList1, 1:uniqueCoordList2, 2:uniqueCoordList3}
+			let currentXUniqueList = axisDict[currentAxisNumber]
+			let currentYUniqueList = axisDict[nextAxisNumberDict[currentAxisNumber]]
+			let currentZUniqueList = axisDict[nextAxisNumberDict[nextAxisNumberDict[currentAxisNumber]]]
+			let currentXCoord = currentXUniqueList[xLoopCounter]
+			let currentYCoord = currentYUniqueList[yLoopCounter]
+			let currentZCoord = currentZUniqueList[zLoopCounter]
+			let targetPoemDict = {0: [currentXCoord, currentYCoord, currentZCoord], 1: [currentZCoord, currentXCoord, currentYCoord], 2: [currentYCoord, currentZCoord, currentXCoord]}
+			let currentTargetPoem = targetPoemDict[currentAxisNumber]
 			
 			if (!this.checkArrIn2dMatrix(outputList, currentTargetPoem) && this.checkArrIn2dMatrix(poemList, currentTargetPoem)) {
-				console.log(successCounter);			
-				outputList.push(currentTargetPoem.slice(0));				
-				loopCounter = 1;
-				currentAxis = nextAxisDict[currentAxisNumber]
+				console.log(successCounter);
+				uniqueCoordList1 = this.updateUniqueLists(poemList, currentTargetPoem)[0]
+				uniqueCoordList2 = this.updateUniqueLists(poemList, currentTargetPoem)[1]
+				uniqueCoordList3 = this.updateUniqueLists(poemList, currentTargetPoem)[2]
+				
 				currentAxisNumber = nextAxisNumberDict[currentAxisNumber]
-				const currentIndex = currentAxis.indexOf(startingPoem[currentAxisNumber])
-				currentAxis = currentAxis.slice(currentIndex).concat(currentAxis.slice(0, currentIndex));
+				outputList.push(currentTargetPoem.slice(0));
+				poemList = this.removeItem(poemList, currentTargetPoem);
+
+				zLoopCounter  = 0;
+				yLoopCounter = 0;
+				xLoopCounter = 0;
 				successCounter++
+			} else if (currentXCoord == currentXUniqueList[currentXUniqueList.length - 1]) {
+				if (currentYCoord == currentYUniqueList[currentYUniqueList.length - 1]) {
+					if (currentZCoord == currentZUniqueList[currentZUniqueList.length - 1]) {
+						zLoopCounter  = 0;
+						yLoopCounter = 0;
+						xLoopCounter = 0;
+					}
+					zLoopCounter += 1;
+					yLoopCounter = 0;
+					xLoopCounter = 0;
+				}
+				yLoopCounter += 1;
+				xLoopCounter = 0;
 			} else {
-				loopCounter++
+				xLoopCounter += 1;
 			}
 		}
 		if (poemOrder == "end") {
@@ -137,13 +141,26 @@ export class HomeComponent implements OnInit {
 		return finalOutputList
 	}
 
-	public updateUniqueLists(poemList) {
-		
+	public updateUniqueLists(poemList: number[][], currentPoem: number[]) {
+		const uniqueCoordList1Raw: number[] = this.sortedUniqueList(poemList, 0)
+		const uniqueCoordList2Raw: number[] = this.sortedUniqueList(poemList, 1)
+		const uniqueCoordList3Raw: number[] = this.sortedUniqueList(poemList, 2)
+		const xIndex = uniqueCoordList1Raw.indexOf(currentPoem[0])
+		const yIndex = uniqueCoordList2Raw.indexOf(currentPoem[1])
+		const zIndex = uniqueCoordList3Raw.indexOf(currentPoem[2])
+		const uniqueCoordList1: number[] = uniqueCoordList1Raw.slice(xIndex).concat(uniqueCoordList1Raw.slice(0, xIndex));
+		const uniqueCoordList2: number[] = uniqueCoordList2Raw.slice(yIndex).concat(uniqueCoordList2Raw.slice(0, yIndex));
+		const uniqueCoordList3: number[] = uniqueCoordList3Raw.slice(zIndex).concat(uniqueCoordList3Raw.slice(0, zIndex));
+		return [uniqueCoordList1, uniqueCoordList2, uniqueCoordList3]
 	}
 
 	public checkArrIn2dMatrix(matrix, testArr) {
 		const matrixStr = matrix.map((poemCode) => String(poemCode));	
 		return matrixStr.includes(testArr.toString())
+	}
+
+	public  removeItem(arr, item){
+		return arr.filter(f => f.toString() !== item.toString())
 	}
 
 	public async createTemplateList(poemList: string[]) {
@@ -241,15 +258,15 @@ export class HomeComponent implements OnInit {
 	public sortByMultipleValues(inputList: number[][]) {
 		const outputListRaw = [];
 		const tempList = [];
-		const xUniqueCoordList = this.sortedUniqueList(inputList, 0)
-		const yUniqueCoordList = this.sortedUniqueList(inputList, 1)
-		const zUniqueCoordList = this.sortedUniqueList(inputList, 2)
+		const uniqueCoordList1 = this.sortedUniqueList(inputList, 0)
+		const uniqueCoordList2 = this.sortedUniqueList(inputList, 1)
+		const uniqueCoordList3 = this.sortedUniqueList(inputList, 2)
 
-		for (let xj=0; xj < xUniqueCoordList.length; xj++) {
-				for (let yj=0; yj < yUniqueCoordList.length; yj++) {
-						for (let zj=0; zj < zUniqueCoordList.length; zj++) {
+		for (let xj=0; xj < uniqueCoordList1.length; xj++) {
+				for (let yj=0; yj < uniqueCoordList2.length; yj++) {
+						for (let zj=0; zj < uniqueCoordList3.length; zj++) {
 								for (let i=0; i < inputList.length; i++) {
-										if (inputList[i][0] == xUniqueCoordList[xj] && inputList[i][1] == yUniqueCoordList[yj] && inputList[i][2] == zUniqueCoordList[zj]) {
+										if (inputList[i][0] == uniqueCoordList1[xj] && inputList[i][1] == uniqueCoordList2[yj] && inputList[i][2] == uniqueCoordList3[zj]) {
 												tempList.push(inputList[i]);
 										}
 								}
@@ -262,8 +279,7 @@ export class HomeComponent implements OnInit {
 
 	public sortedUniqueList(inputList: number[][], coordIndex: number) {
 		const currentCoordSet = new Set(inputList.map(poemCode => poemCode[coordIndex]));  
-		const currentCoordUnique = (Array.from(currentCoordSet));
-		
+		const currentCoordUnique = (Array.from(currentCoordSet));		
 		const finalUniqueList = currentCoordUnique.sort(function(a, b){return a - b});
 		return finalUniqueList
 	}
