@@ -59,6 +59,10 @@ export class HomeComponent implements OnInit {
 	}
 
 	public async execute() {
+		console.log(this.numOfPoems);
+		console.log(this.startingPoem);
+		console.log(this.poemOrder);
+
 		this.formBool = false;
 		this.loadingBool = true;
 		await this.sleep(100);
