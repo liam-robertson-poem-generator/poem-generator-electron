@@ -41,8 +41,11 @@ export class HomeComponent implements OnInit {
 	constructor(private electronService: ElectronService) {}
 
 	async ngOnInit() {
-		this.poemListPath = resolve(__dirname, "../../../../../../src/assets/syllabary-poems")
-		this.templatePath = resolve(__dirname, "../../../../../../src/assets/poetry-template.docx")
+		// npm run electron:build
+		// this.poemListPath = resolve(__dirname, "../../../../../../src/assets/syllabary-poems")
+		// this.templatePath = resolve(__dirname, "../../../../../../src/assets/poetry-template.docx")
+		this.poemListPath = resolve(__dirname, "./assets/syllabary-poems")
+		this.templatePath = resolve(__dirname, "./assets/poetry-template.docx")
 		this.poemListRaw = await this.electronService.getDirectory(this.poemListPath)
 
 		this.poemFormGroup = new FormGroup ({
@@ -166,8 +169,10 @@ export class HomeComponent implements OnInit {
 			let hasTextVar = true;
 			const currentPoemName = poemList[index] + '.xml'
 			const currentGlyphName = poemList[index] + '.jpg'
-			const poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-poems"), currentPoemName);		
-			const glyphPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-glyphs-jpg"), currentGlyphName); 
+			// const poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-poems"), currentPoemName);		
+			// const glyphPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-glyphs-jpg"), currentGlyphName); 
+			const poemPath = join(resolve(__dirname, "./assets/syllabary-poems"), currentPoemName);		
+			const glyphPath = join(resolve(__dirname, "./assets/syllabary-glyphs-jpg"), currentGlyphName); 
 			const poemGlyph = await this.electronService.readFile(glyphPath, {})	
 			const poemContent = await this.electronService.readFile(poemPath, {encoding:'utf8', flag:'r'})		
 			const parser = new DOMParser();
@@ -267,7 +272,8 @@ export class HomeComponent implements OnInit {
 		});
 
 		Packer.toBuffer(doc).then(async (buffer) => {
-			this.outputPath = join(resolve(__dirname, "../../../../../../../generated-poems_" + this.startingPoemRaw + "_" + this.numOfPoems + "_" + this.poemOrder + ".docx"))
+			// this.outputPath = join(resolve(__dirname, "../../../../../../../generated-poems_" + this.startingPoemRaw + "_" + this.numOfPoems + "_" + this.poemOrder + ".docx"))
+			this.outputPath = join(resolve(__dirname, "../../../../../../generated-poems_" + this.startingPoemRaw + "_" + this.numOfPoems + "_" + this.poemOrder + ".docx"))
 			await this.electronService.writeFile(this.outputPath, buffer)
 		});	
 	}
