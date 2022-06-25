@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { FormControl, Validators, FormBuilder, FormGroup } from '@angular/forms';
+import { FormControl, Validators, FormGroup } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { ElectronService } from "../core/services/electron/electron.service";
 import { map, startWith } from 'rxjs/operators';
-import { AlignmentType, Document, HeadingLevel, HorizontalPositionAlign, HorizontalPositionRelativeFrom, ImageRun, Packer, PageBreak, Paragraph, TextRun, TextWrappingSide, TextWrappingType, VerticalPositionRelativeFrom } from "docx";
 import { join, resolve } from 'path';
+import { PoemOut } from './poem-out.model';
+import { AlignmentType, Document, HorizontalPositionAlign, ImageRun, Packer, Paragraph, TextRun, VerticalPositionRelativeFrom } from "docx";
 
 @Component({
 	selector: 'app-home',
@@ -13,56 +13,52 @@ import { join, resolve } from 'path';
 	styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
-	public formBool = true;
-	public loadingBool = false;
-	public successBool = false;
-	public optionsInt: number[][];
-	public options: string[];
-	public templatePath: string;
+	formBool = true;
+	loadingBool = false;
+	successBool = false;	
+	optionsInt: number[][];
+	options: string[];
+	templatePath: string;
 	filteredOptions: Observable<string[]>;
-	public poemListRaw: any;
-	public poemList: number[][];
-	public poemListSorted: number[][];
-	public startingPoem: number[];
-	public poemListPath: string;
-	yourVariable: any;
-	numOfPoems: any;
-	poemOrder: any;
+	poemListRaw: any;
+	poemList: number[][];
+	poemListSorted: number[][];
+	startingPoem: number[];
+	poemListPath: string;
+	numOfPoems: number;
+	poemOrder: string;
 	finalPoemList: string[];
 	poemFormGroup = new FormGroup ({
 		startingPoemControl: new FormControl(''),
 		poemOrderControl: new FormControl(''),
-		numOfPoemsControl: new FormControl('', [Validators.min(0), Validators.max(2268)])
+		numOfPoemsControl: new FormControl('')
 	});
-	templateList: any[];
 	outputPath: string;
-	startingPoemRaw: any;
-	loopCounter: any;
+	startingPoemRaw: string;
+	loopCounter: number;
+	templateList: PoemOut[];
 
-	constructor(private router: Router, private electronService: ElectronService, private fb: FormBuilder) {  
-	}
+	constructor(private electronService: ElectronService) {}
+
 	async ngOnInit() {
-		this.poemListPath = resolve(__dirname, "../../../../../../src/assets/syllabary-poems")   
-		this.templatePath = resolve(__dirname, "../../../../../../src/assets/poetry-template.docx") 
-		this.poemListRaw = await this.electronService.getDirectory(this.poemListPath)	
-				
-		this.poemList = this.refinePoemList(this.poemListRaw)
+		this.poemListPath = resolve(__dirname, "../../../../../../src/assets/syllabary-poems")
+		this.templatePath = resolve(__dirname, "../../../../../../src/assets/poetry-template.docx")
+		this.poemListRaw = await this.electronService.getDirectory(this.poemListPath)
+
+		this.poemFormGroup = new FormGroup ({
+			startingPoemControl: new FormControl(''),
+			poemOrderControl: new FormControl(''),
+			numOfPoemsControl: new FormControl('', [Validators.min(0), Validators.max(this.poemListRaw.length)])
+		});
 		
-		this.poemListSorted = this.sortByMultipleValues(this.poemList);		
+		this.poemList = this.refinePoemList(this.poemListRaw)
+		this.poemListSorted = this.sortByMultipleValues(this.poemList);
 		this.optionsInt = this.poemListSorted;
 		this.options = this.optionsInt.map(value => value.join("-").toString())
-		this.filteredOptions = this.poemFormGroup.get('startingPoemControl').valueChanges
-      .pipe(
-        startWith(''),
-        map(val => this._filter(val))
-      );
+		this.filteredOptions = (this.poemFormGroup.get('startingPoemControl') as FormControl).valueChanges.pipe(startWith(''), map(val => this._filter(val)));
 	}
 
 	public async execute() {
-		console.log(this.numOfPoems);
-		console.log(this.startingPoem);
-		console.log(this.poemOrder);
-
 		this.formBool = false;
 		this.loadingBool = true;
 		await this.sleep(100);
@@ -73,7 +69,6 @@ export class HomeComponent implements OnInit {
 		this.poemOrder = this.poemFormGroup.value.poemOrderControl
 
 		this.finalPoemList = this.iterateBySyllables(this.poemListSorted, this.startingPoem, this.numOfPoems, this.poemOrder)
-		console.log(this.finalPoemList);
 		this.templateList = await this.createTemplateList(this.finalPoemList)
 		this.writeDocument(this.templateList)
 		await this.sleep(1500);
@@ -83,38 +78,36 @@ export class HomeComponent implements OnInit {
 	}
 
 	public iterateBySyllables(poemList: number[][], startingPoem: number[], numOfPoems: number, poemOrder: string) {
-		let uniqueCoordList1 = this.updateUniqueLists(poemList, startingPoem)[0]
-		let uniqueCoordList2 = this.updateUniqueLists(poemList, startingPoem)[1]
-		let uniqueCoordList3 = this.updateUniqueLists(poemList, startingPoem)[2]
+		let uniqueCoordList1: number[] = this.updateUniqueLists(poemList, startingPoem)[0]
+		let uniqueCoordList2: number[] = this.updateUniqueLists(poemList, startingPoem)[1]
+		let uniqueCoordList3: number[] = this.updateUniqueLists(poemList, startingPoem)[2]
 
-		let nextAxisNumberDict = {0:1, 1:2, 2:0};
-		let outputList = []
+		let nextAxisNumberDict: {0: number, 1: number, 2: number} = {0:1, 1:2, 2:0};
+		let outputList: number[][] = []
 		let successCounter: number = 0
-		let currentAxisNumber = 0
-		let xLoopCounter = 0
-		let yLoopCounter = 0
-		let zLoopCounter = 0
-		let currentTargetPoem = startingPoem
+		let currentAxisNumber: number = 0
+		let xLoopCounter: number = 0
+		let yLoopCounter: number = 0
+		let zLoopCounter: number = 0
 
 		while (successCounter < numOfPoems) {
-			let axisDict = {0:uniqueCoordList1, 1:uniqueCoordList2, 2:uniqueCoordList3}
-			let currentXUniqueList = axisDict[currentAxisNumber]
-			let currentYUniqueList = axisDict[nextAxisNumberDict[currentAxisNumber]]
-			let currentZUniqueList = axisDict[nextAxisNumberDict[nextAxisNumberDict[currentAxisNumber]]]
-			let currentXCoord = currentXUniqueList[xLoopCounter]
-			let currentYCoord = currentYUniqueList[yLoopCounter]
-			let currentZCoord = currentZUniqueList[zLoopCounter]
-			let targetPoemDict = {0: [currentXCoord, currentYCoord, currentZCoord], 1: [currentZCoord, currentXCoord, currentYCoord], 2: [currentYCoord, currentZCoord, currentXCoord]}
-			let currentTargetPoem = targetPoemDict[currentAxisNumber]
+			let axisDict: {0: number[], 1: number[], 2: number[]} = {0:uniqueCoordList1, 1:uniqueCoordList2, 2:uniqueCoordList3}
+			let currentXUniqueList: number[] = axisDict[currentAxisNumber]
+			let currentYUniqueList: number[] = axisDict[nextAxisNumberDict[currentAxisNumber]]
+			let currentZUniqueList: number[] = axisDict[nextAxisNumberDict[nextAxisNumberDict[currentAxisNumber]]]
+			let currentXCoord: number = currentXUniqueList[xLoopCounter]
+			let currentYCoord: number = currentYUniqueList[yLoopCounter]
+			let currentZCoord: number = currentZUniqueList[zLoopCounter]
+			let targetPoemDict: {0: number[], 1: number[], 2: number[]} = {0: [currentXCoord, currentYCoord, currentZCoord], 1: [currentZCoord, currentXCoord, currentYCoord], 2: [currentYCoord, currentZCoord, currentXCoord]}
+			let currentTargetPoem: number[] = targetPoemDict[currentAxisNumber]
 			
 			if (!this.checkArrIn2dMatrix(outputList, currentTargetPoem) && this.checkArrIn2dMatrix(poemList, currentTargetPoem)) {
-				console.log(successCounter);
 				uniqueCoordList1 = this.updateUniqueLists(poemList, currentTargetPoem)[0]
 				uniqueCoordList2 = this.updateUniqueLists(poemList, currentTargetPoem)[1]
 				uniqueCoordList3 = this.updateUniqueLists(poemList, currentTargetPoem)[2]
 				
 				currentAxisNumber = nextAxisNumberDict[currentAxisNumber]
-				outputList.push(currentTargetPoem.slice(0));
+				outputList.push(currentTargetPoem);
 				poemList = this.removeItem(poemList, currentTargetPoem);
 
 				zLoopCounter  = 0;
@@ -168,40 +161,48 @@ export class HomeComponent implements OnInit {
 	}
 
 	public async createTemplateList(poemList: string[]) {
-		const outputList = [];
-		for (let index = 0; index < poemList.length; index++) {		
-
-			const currentTargetPoem = poemList[index]
+		const outputList: PoemOut[] = [];
+		for (let index = 0; index < poemList.length; index++) {	
 			let hasTextVar = true;
-			const currentPoemName = poemList[index] + '.json'
+			const currentPoemName = poemList[index] + '.xml'
 			const currentGlyphName = poemList[index] + '.jpg'
 			const poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-poems"), currentPoemName);		
 			const glyphPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-glyphs-jpg"), currentGlyphName); 
 			const poemGlyph = await this.electronService.readFile(glyphPath, {})	
 			const poemContent = await this.electronService.readFile(poemPath, {encoding:'utf8', flag:'r'})		
-			const poemJson = JSON.parse(poemContent.toString());   
-			const contentJson = poemJson['poem'];
-			if (contentJson['title'] === null) {
-					contentJson['title'] = 'Untitled';
+			const parser = new DOMParser();
+			const poemXml = parser.parseFromString(poemContent.toString(), "text/xml");
+
+			let poemText = "";
+			let poemTitle = "Untitled";
+			console.log(poemXml.getElementsByTagName("text")[0].childNodes[0]);
+			
+			if (poemXml.getElementsByTagName("text")[0].childNodes[0] != undefined) {
+				poemText = poemXml.getElementsByTagName("text")[0].childNodes[0].nodeValue as string;
+				hasTextVar = false;
 			}
-			if (contentJson['text'] === null) {
-					hasTextVar = false;
+			if (poemXml.getElementsByTagName("title")[0].childNodes[0] != undefined) {
+				poemText = poemXml.getElementsByTagName("title")[0].childNodes[0].nodeValue as string;
 			}
-			outputList.push({
-			"code": currentTargetPoem,
-			"title": contentJson['title'],
-			"text": contentJson['text'],
-			"glyph": poemGlyph,
-			"hasText": hasTextVar,
-	})}		
+			
+			const currentPoem: PoemOut = {
+				code: poemList[index],
+				title: poemTitle, 
+				text: poemText,
+				glyph: poemGlyph,
+				hasText: hasTextVar
+			}
+			console.log(currentPoem);
+				
+			outputList.push(currentPoem)}		
 		return outputList
 	}
 
-	public writeDocument(outputList) {
-		const docContentList = [];
+	public writeDocument(outputList: any[]) {
+		const docContentList: Paragraph[] = [];
 		for (let index = 0; index < outputList.length; index++) { 
 			const poemGlyph = outputList[index]["glyph"]			
-			const poemImage = new ImageRun({
+			const poemImage: ImageRun = new ImageRun({
 				data: poemGlyph,
 				transformation: {
 					width: 215,
@@ -219,7 +220,7 @@ export class HomeComponent implements OnInit {
 				},
 			});	
 
-			let currentTitle = 
+			let currentTitle: Paragraph = 
 				new Paragraph({
 					children: [ 
 						new TextRun({text: outputList[index]["title"], font: "Underwood Champion", size: 40}),
@@ -229,7 +230,7 @@ export class HomeComponent implements OnInit {
 					alignment: AlignmentType.CENTER,
 				})
 
-			let currentText = 
+			let currentText: Paragraph = 
 				new Paragraph({
 					children: [ 
 						new TextRun({text: outputList[index]["text"], font: "Underwood Champion", size: 30, break: 2}),
@@ -246,7 +247,7 @@ export class HomeComponent implements OnInit {
 			docContentList.push(currentImage) 
 		}
 
-		const doc = new Document({
+		const doc: Document = new Document({
 			sections: [{
 				properties: {},
 				children: docContentList,
@@ -260,11 +261,11 @@ export class HomeComponent implements OnInit {
 	}
 
 	public sortByMultipleValues(inputList: number[][]) {
-		const outputListRaw = [];
-		const tempList = [];
-		const uniqueCoordList1 = this.sortedUniqueList(inputList, 0)
-		const uniqueCoordList2 = this.sortedUniqueList(inputList, 1)
-		const uniqueCoordList3 = this.sortedUniqueList(inputList, 2)
+		const outputListRaw: number[][] = [];
+		const tempList: number[][] = [];
+		const uniqueCoordList1: number[] = this.sortedUniqueList(inputList, 0)
+		const uniqueCoordList2: number[] = this.sortedUniqueList(inputList, 1)
+		const uniqueCoordList3: number[] = this.sortedUniqueList(inputList, 2)
 
 		for (let xj=0; xj < uniqueCoordList1.length; xj++) {
 				for (let yj=0; yj < uniqueCoordList2.length; yj++) {
@@ -291,8 +292,8 @@ export class HomeComponent implements OnInit {
 	public refinePoemList(inputPoemListRaw: string[]): number[][] {
 		let inputPoemList: string[] = [];
 		inputPoemList = inputPoemListRaw.reduce(function (filtered: any[], currentElement: string) {
-			if (currentElement.slice(-5) === '.json') {
-					currentElement = currentElement.slice(0, -5);
+			if (currentElement.slice(-4) === '.xml') {
+					currentElement = currentElement.slice(0, -4);
 					filtered.push(currentElement);
 				}
 				return filtered
@@ -316,5 +317,3 @@ export class HomeComponent implements OnInit {
   }
 
 }
-
-
