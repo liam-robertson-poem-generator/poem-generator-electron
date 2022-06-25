@@ -173,16 +173,14 @@ export class HomeComponent implements OnInit {
 			const parser = new DOMParser();
 			const poemXml = parser.parseFromString(poemContent.toString(), "text/xml");
 
+			let poemTitle = "";
 			let poemText = "";
-			let poemTitle = "Untitled";
-			console.log(poemXml.getElementsByTagName("text")[0].childNodes[0]);
-			
+			if (poemXml.getElementsByTagName("title")[0].childNodes[0] != undefined) {
+				poemTitle = poemXml.getElementsByTagName("title")[0].childNodes[0].nodeValue as string;
+			}
 			if (poemXml.getElementsByTagName("text")[0].childNodes[0] != undefined) {
 				poemText = poemXml.getElementsByTagName("text")[0].childNodes[0].nodeValue as string;
 				hasTextVar = false;
-			}
-			if (poemXml.getElementsByTagName("title")[0].childNodes[0] != undefined) {
-				poemText = poemXml.getElementsByTagName("title")[0].childNodes[0].nodeValue as string;
 			}
 			
 			const currentPoem: PoemOut = {
@@ -192,8 +190,7 @@ export class HomeComponent implements OnInit {
 				glyph: poemGlyph,
 				hasText: hasTextVar
 			}
-			console.log(currentPoem);
-				
+			
 			outputList.push(currentPoem)}		
 		return outputList
 	}
@@ -218,32 +215,47 @@ export class HomeComponent implements OnInit {
 						offset: 2014400,
 					},
 				},
-			});	
+			});				
 
 			let currentTitle: Paragraph = 
 				new Paragraph({
 					children: [ 
-						new TextRun({text: outputList[index]["title"], font: "Underwood Champion", size: 40}),
-						new TextRun({text: " (" + outputList[index]["code"] + ")", font: "Underwood Champion", size: 30}),
+						new TextRun({text: outputList[index]["title"], font: "Garamond", size: 28, bold: true, break: 1}),
 					],
 					pageBreakBefore: true,
 					alignment: AlignmentType.CENTER,
 				})
 
-			let currentText: Paragraph = 
-				new Paragraph({
-					children: [ 
-						new TextRun({text: outputList[index]["text"], font: "Underwood Champion", size: 30, break: 2}),
-					],
-				})
+			if (outputList[index]["title"] == "") {
+				currentTitle = 
+					new Paragraph({
+						children: [ 
+							new TextRun({text: "", font: "Garamond", size: 10}),
+						],
+						pageBreakBefore: true,
+						alignment: AlignmentType.CENTER,
+					})
+			}
 
+			const textLines: string[] = outputList[index]["text"].split("\n")
+			let currentText: Paragraph[] = 
+				textLines.map((poemLine: string) => {
+					return new Paragraph({
+						children: [ 
+							new TextRun({text: poemLine, font: "Garamond", size: 24, break: 0.5}),
+						],
+						alignment: AlignmentType.LEFT,
+					})
+				})
+				
 			let currentImage = new Paragraph({
 				children: [
 					poemImage
 				]})
 
+			
 			docContentList.push(currentTitle) 
-			docContentList.push(currentText) 
+			currentText.map((textLine: Paragraph) => docContentList.push(textLine))
 			docContentList.push(currentImage) 
 		}
 
@@ -255,7 +267,7 @@ export class HomeComponent implements OnInit {
 		});
 
 		Packer.toBuffer(doc).then(async (buffer) => {
-			this.outputPath = join(resolve(__dirname, "../../../../../../../generated-poems_" + this.startingPoemRaw + "_" + this.numOfPoems + ".docx"))
+			this.outputPath = join(resolve(__dirname, "../../../../../../../generated-poems_" + this.startingPoemRaw + "_" + this.numOfPoems + "_" + this.poemOrder + ".docx"))
 			await this.electronService.writeFile(this.outputPath, buffer)
 		});	
 	}
