@@ -220,22 +220,23 @@ export class HomeComponent implements OnInit {
 						offset: 2014400,
 					},
 				},
-			});				
+			});	
 
-			let currentTitle: Paragraph = 
-				new Paragraph({
-					children: [ 
-						new TextRun({text: outputList[index]["title"], font: "Garamond", size: 28, bold: true, break: 1}),
-					],
-					pageBreakBefore: true,
-					alignment: AlignmentType.CENTER,
-				})
-
+			let currentTitle: Paragraph;
 			if (outputList[index]["title"] == "") {
 				currentTitle = 
 					new Paragraph({
 						children: [ 
-							new TextRun({text: "", font: "Garamond", size: 10}),
+							new TextRun({text: "break", color: "white", font: "Garamond", size: 30, break: 3}),
+						],
+						pageBreakBefore: true,
+						alignment: AlignmentType.CENTER,
+					})
+			} else {			
+				currentTitle = 
+					new Paragraph({
+						children: [ 
+							new TextRun({text: outputList[index]["title"], font: "Garamond", size: 30, bold: true, break: 5}),
 						],
 						pageBreakBefore: true,
 						alignment: AlignmentType.CENTER,
@@ -247,19 +248,19 @@ export class HomeComponent implements OnInit {
 				textLines.map((poemLine: string) => {
 					return new Paragraph({
 						children: [ 
-							new TextRun({text: poemLine, font: "Garamond", size: 24, break: 0.5}),
+							new TextRun({text: poemLine, font: "Garamond", size: 30}),
 						],
 						alignment: AlignmentType.LEFT,
 					})
-				})
+				}) as Paragraph[]
 				
 			let currentImage = new Paragraph({
 				children: [
 					poemImage
 				]})
 
-			
 			docContentList.push(currentTitle) 
+			docContentList.push(new Paragraph({children: [new TextRun({text: "break", font: "Garamond", color: "white", size: 30})]})) 
 			currentText.map((textLine: Paragraph) => docContentList.push(textLine))
 			docContentList.push(currentImage) 
 		}
