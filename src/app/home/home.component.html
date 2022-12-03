@@ -13,7 +13,9 @@
                     matInput type="number"  
                     formControlName="numOfPoemsControl"
                     required>
+                <mat-hint>Max number of poems: {{poemListLength}}</mat-hint>
             </mat-form-field>
+            <br><br>
             <mat-form-field class="example-dropdown" appearance="fill">
                 <mat-label>What poem do you want to select?</mat-label>
                 <input 
@@ -41,8 +43,12 @@
             <button type="submit" mat-raised-button (click)="execute()" [disabled]="!poemFormGroup.valid">Submit</button>
         </div>
     </div>
-    <div class="progress-bar" *ngIf=loadingBool>
-        <h1>Loading...</h1>
+    <div class="progress-bar" *ngIf=algorithmBool>
+        <h1>Sorting Poems...</h1>
+        <mat-progress-bar class="progress-bar-mat" mode="indeterminate"></mat-progress-bar>
+    </div>
+    <div class="progress-bar" *ngIf=writingDocBool>
+        <h1>Writing To Word Document...</h1>
         <mat-progress-bar class="progress-bar-mat" mode="indeterminate"></mat-progress-bar>
     </div>
     <div class="success-container" *ngIf=successBool>

@@ -1,6 +1,5 @@
 import { async, ComponentFixture, fakeAsync, TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { HomeComponent } from './home.component';
-import { HomeModule } from './home.module';
 import { TranslateModule } from '@ngx-translate/core';
 import { RouterTestingModule } from '@angular/router/testing';
 
@@ -11,7 +10,7 @@ describe('HomeComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [HomeComponent],
-      imports: [TranslateModule.forRoot(), RouterTestingModule, HomeModule]
+      imports: [TranslateModule.forRoot(), RouterTestingModule]
     }).compileComponents();
   }));
 

@@ -13,8 +13,26 @@ import { AlignmentType, Document, HorizontalPositionAlign, ImageRun, Packer, Par
 	styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
+
+	// INSTRUCTIONS 
+	/*******************
+	- run in the electron app, the browser window won't work 
+	- app will refresh when changes are made
+	- build with this command:
+		npm run electron:build
+	- Builds are stored in release folder
+		- e.g. release/angular-electron 10.1.0.exe
+	*******************/
+
+	/*******************
+	ENVIRONMENT MODE
+	- options: dev or prod
+	*******************/
+	environment: string = 'dev'
+
+	writingDocBool: boolean = false;
 	formBool = true;
-	loadingBool = false;
+	algorithmBool = false;
 	successBool = false;	
 	optionsInt: number[][];
 	options: string[];
@@ -37,24 +55,28 @@ export class HomeComponent implements OnInit {
 	startingPoemRaw: string;
 	loopCounter: number;
 	templateList: PoemOut[];
+	poemListLength: number | null = null;
 
 	constructor(private electronService: ElectronService) {}
 
 	async ngOnInit() {
-		// npm run electron:build
-		// this.poemListPath = resolve(__dirname, "../../../../../../src/assets/syllabary-poems")
-		// this.templatePath = resolve(__dirname, "../../../../../../src/assets/poetry-template.docx")
-		this.poemListPath = resolve(__dirname, "./assets/syllabary-poems")
-		this.templatePath = resolve(__dirname, "./assets/poetry-template.docx")
+		if (this.environment == "dev") {
+			this.poemListPath = resolve(__dirname, "../../../../../../src/assets/syllabary-poems")
+			this.templatePath = resolve(__dirname, "../../../../../../src/assets/poetry-template.docx")
+		} else if (this.environment == "prod") {
+			this.poemListPath = resolve(__dirname, "./assets/syllabary-poems")
+			this.templatePath = resolve(__dirname, "./assets/poetry-template.docx")
+		}
 		this.poemListRaw = await this.electronService.getDirectory(this.poemListPath)
+		this.poemList = this.refinePoemList(this.poemListRaw)
+		this.poemListLength = this.poemList.length
 
 		this.poemFormGroup = new FormGroup ({
 			startingPoemControl: new FormControl(''),
 			poemOrderControl: new FormControl(''),
-			numOfPoemsControl: new FormControl('', [Validators.min(0), Validators.max(this.poemListRaw.length)])
+			numOfPoemsControl: new FormControl('', [Validators.min(0), Validators.max(this.poemListLength as number)])
 		});
-		
-		this.poemList = this.refinePoemList(this.poemListRaw)
+
 		this.poemListSorted = this.sortByMultipleValues(this.poemList);
 		this.optionsInt = this.poemListSorted;
 		this.options = this.optionsInt.map(value => value.join("-").toString())
@@ -63,7 +85,7 @@ export class HomeComponent implements OnInit {
 
 	public async execute() {
 		this.formBool = false;
-		this.loadingBool = true;
+		this.algorithmBool = true;
 		await this.sleep(100);
 
 		this.startingPoemRaw = this.poemFormGroup.value.startingPoemControl
@@ -76,82 +98,97 @@ export class HomeComponent implements OnInit {
 		this.writeDocument(this.templateList)
 		await this.sleep(1500);
 
-		this.loadingBool = false;
+		this.writingDocBool = false;
 		this.successBool = true;
 	}
 
+	/* Poem code algorithm explained:
+	- Start with a given poem code X-Y-Z
+	- Start with a given code axis (always starts with X)
+	- Iterate that axis by 1 i.e. X+1-Y-Z
+	- Check if that poem code is in the list of available poem codes
+	- If it isn't then iterate that axis again i.e. X+2-Y-Z
+	- If there is no poem on that axis at all then iterate Y by 1 and restart the process X-Y+1-Z
+	- If it is then add that poem to the final list 
+	*/
 	public iterateBySyllables(poemList: number[][], startingPoem: number[], numOfPoems: number, poemOrder: string) {
-		let uniqueCoordList1: number[] = this.updateUniqueLists(poemList, startingPoem)[0]
-		let uniqueCoordList2: number[] = this.updateUniqueLists(poemList, startingPoem)[1]
-		let uniqueCoordList3: number[] = this.updateUniqueLists(poemList, startingPoem)[2]
-
-		let nextAxisNumberDict: {0: number, 1: number, 2: number} = {0:1, 1:2, 2:0};
+		let maxValueX;
+		let maxValueY;
+		let maxValueZ;
+		let currentValueX = startingPoem[0]
+		let currentValueY = startingPoem[1]
+		let currentValueZ = startingPoem[2]
+		let currentPoem: number[];
 		let outputList: number[][] = []
+		let nextAxisNumDict: {0: number, 1: number, 2: number} = {0:1, 1:2, 2:0};
+		let maxValueDict: {0: number, 1: number, 2: number} = {0:maxValueX, 1:maxValueY, 2:maxValueZ};
+		maxValueDict = this.updateMaxValueDict(poemList);
+		let currentAxisNum = 0
 		let successCounter: number = 0
-		let currentAxisNumber: number = 0
-		let xLoopCounter: number = 0
-		let yLoopCounter: number = 0
-		let zLoopCounter: number = 0
+		let loopCounter1  = 0;
+		let loopCounter2 = 0;
+		let loopCounter3 = 0;
+		let currentAxisValueDict: {0: number, 1: number, 2: number} = {0:currentValueX, 1:currentValueY, 2:currentValueZ};
 
-		while (successCounter < numOfPoems) {
-			let axisDict: {0: number[], 1: number[], 2: number[]} = {0:uniqueCoordList1, 1:uniqueCoordList2, 2:uniqueCoordList3}
-			let currentXUniqueList: number[] = axisDict[currentAxisNumber]
-			let currentYUniqueList: number[] = axisDict[nextAxisNumberDict[currentAxisNumber]]
-			let currentZUniqueList: number[] = axisDict[nextAxisNumberDict[nextAxisNumberDict[currentAxisNumber]]]
-			let currentXCoord: number = currentXUniqueList[xLoopCounter]
-			let currentYCoord: number = currentYUniqueList[yLoopCounter]
-			let currentZCoord: number = currentZUniqueList[zLoopCounter]
-			let targetPoemDict: {0: number[], 1: number[], 2: number[]} = {0: [currentXCoord, currentYCoord, currentZCoord], 1: [currentZCoord, currentXCoord, currentYCoord], 2: [currentYCoord, currentZCoord, currentXCoord]}
-			let currentTargetPoem: number[] = targetPoemDict[currentAxisNumber]
-			
-			if (!this.checkArrIn2dMatrix(outputList, currentTargetPoem) && this.checkArrIn2dMatrix(poemList, currentTargetPoem)) {
-				uniqueCoordList1 = this.updateUniqueLists(poemList, currentTargetPoem)[0]
-				uniqueCoordList2 = this.updateUniqueLists(poemList, currentTargetPoem)[1]
-				uniqueCoordList3 = this.updateUniqueLists(poemList, currentTargetPoem)[2]
-				
-				currentAxisNumber = nextAxisNumberDict[currentAxisNumber]
-				outputList.push(currentTargetPoem);
-				poemList = this.removeItem(poemList, currentTargetPoem);
-
-				zLoopCounter  = 0;
-				yLoopCounter = 0;
-				xLoopCounter = 0;
+		while (successCounter < numOfPoems) {			
+			currentPoem = [currentAxisValueDict[0], currentAxisValueDict[1], currentAxisValueDict[2]]
+			if (!this.checkArrIn2dMatrix(outputList, currentPoem) && this.checkArrIn2dMatrix(poemList, currentPoem)) {
+				currentAxisNum = nextAxisNumDict[currentAxisNum]
+				outputList.push([currentAxisValueDict[0], currentAxisValueDict[1], currentAxisValueDict[2]]);
+				poemList = this.removeItem(poemList, currentPoem);
+				this.adjustForEndOfList(currentPoem, currentAxisNum, maxValueDict);
+				maxValueDict = this.updateMaxValueDict(poemList);
+				loopCounter1 = 0;
+				loopCounter2 = 0;
+				loopCounter3 = 0;
 				successCounter++
-			} else if (currentXCoord == currentXUniqueList[currentXUniqueList.length - 1]) {
-				if (currentYCoord == currentYUniqueList[currentYUniqueList.length - 1]) {
-					if (currentZCoord == currentZUniqueList[currentZUniqueList.length - 1]) {
-						zLoopCounter  = 0;
-						yLoopCounter = 0;
-						xLoopCounter = 0;
+			} else if (loopCounter1 == maxValueDict[currentAxisNum]) {
+				if (loopCounter2 == maxValueDict[nextAxisNumDict[currentAxisNum]]) {
+					if (loopCounter3 == maxValueDict[nextAxisNumDict[nextAxisNumDict[currentAxisNum]]]) {
+						alert("Error: Failed to complete cycle")
+						break
+					} else {
+						const currentAxisNum3 = nextAxisNumDict[nextAxisNumDict[currentAxisNum]]
+						currentAxisValueDict[currentAxisNum3] = this.adjustForEndOfList(currentPoem, currentAxisNum3, maxValueDict)
+						loopCounter3++
+						loopCounter2 = 0;
+						loopCounter1 = 0;
 					}
-					zLoopCounter += 1;
-					yLoopCounter = 0;
-					xLoopCounter = 0;
+				} else {
+					const currentAxisNum2 = nextAxisNumDict[currentAxisNum]
+					currentAxisValueDict[currentAxisNum2] = this.adjustForEndOfList(currentPoem, currentAxisNum2, maxValueDict)
+					loopCounter2++
+					loopCounter1 = 0;
 				}
-				yLoopCounter += 1;
-				xLoopCounter = 0;
 			} else {
-				xLoopCounter += 1;
+				currentAxisValueDict[currentAxisNum] = this.adjustForEndOfList(currentPoem, currentAxisNum, maxValueDict)
+				loopCounter1++
 			}
 		}
 		if (poemOrder == "end") {
 			outputList = outputList.reverse();
 		}
+		this.algorithmBool = false;
+		this.writingDocBool = true;
 		const finalOutputList = outputList.map(value => value.join("-").toString())		
 		return finalOutputList
 	}
 
-	public updateUniqueLists(poemList: number[][], currentPoem: number[]) {
-		const uniqueCoordList1Raw: number[] = this.sortedUniqueList(poemList, 0)
-		const uniqueCoordList2Raw: number[] = this.sortedUniqueList(poemList, 1)
-		const uniqueCoordList3Raw: number[] = this.sortedUniqueList(poemList, 2)
-		const xIndex = uniqueCoordList1Raw.indexOf(currentPoem[0])
-		const yIndex = uniqueCoordList2Raw.indexOf(currentPoem[1])
-		const zIndex = uniqueCoordList3Raw.indexOf(currentPoem[2])
-		const uniqueCoordList1: number[] = uniqueCoordList1Raw.slice(xIndex).concat(uniqueCoordList1Raw.slice(0, xIndex));
-		const uniqueCoordList2: number[] = uniqueCoordList2Raw.slice(yIndex).concat(uniqueCoordList2Raw.slice(0, yIndex));
-		const uniqueCoordList3: number[] = uniqueCoordList3Raw.slice(zIndex).concat(uniqueCoordList3Raw.slice(0, zIndex));
-		return [uniqueCoordList1, uniqueCoordList2, uniqueCoordList3]
+	public adjustForEndOfList(currentPoem: number[], currentAxisNum: number, maxValueDict: {0: number, 1: number, 2: number}) {
+		const finalNumInList: number = maxValueDict[currentAxisNum]
+		if (currentPoem[currentAxisNum] == finalNumInList) {
+			currentPoem[currentAxisNum] = 1
+		} else {
+			currentPoem[currentAxisNum]++
+		}
+		return currentPoem[currentAxisNum]
+	}
+
+	public updateMaxValueDict(poemList: number[][]) {
+		const maxValueX: number = Math.max(...poemList.map((poemCode: number[]) => poemCode[0]))
+		const maxValueY: number = Math.max(...poemList.map((poemCode: number[]) => poemCode[1]))
+		const maxValueZ: number = Math.max(...poemList.map((poemCode: number[]) => poemCode[2]))
+		return {0:maxValueX, 1:maxValueY, 2:maxValueZ};
 	}
 
 	public checkArrIn2dMatrix(matrix, testArr) {
@@ -169,10 +206,15 @@ export class HomeComponent implements OnInit {
 			let hasTextVar = true;
 			const currentPoemName = poemList[index] + '.xml'
 			const currentGlyphName = poemList[index] + '.jpg'
-			// const poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-poems"), currentPoemName);		
-			// const glyphPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-glyphs-jpg"), currentGlyphName); 
-			const poemPath = join(resolve(__dirname, "./assets/syllabary-poems"), currentPoemName);		
-			const glyphPath = join(resolve(__dirname, "./assets/syllabary-glyphs-jpg"), currentGlyphName); 
+			let poemPath: string | null = null;
+			let glyphPath: string | null = null;
+			if (this.environment == "dev") {
+				poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-poems"), currentPoemName);		
+				glyphPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-glyphs-jpg"), currentGlyphName); 
+			} else if (this.environment == "prod") {
+				poemPath = join(resolve(__dirname, "./assets/syllabary-poems"), currentPoemName);		
+				glyphPath = join(resolve(__dirname, "./assets/syllabary-glyphs-jpg"), currentGlyphName); 
+			}
 			const poemGlyph = await this.electronService.readFile(glyphPath, {})	
 			const poemContent = await this.electronService.readFile(poemPath, {encoding:'utf8', flag:'r'})		
 			const parser = new DOMParser();
@@ -309,16 +351,14 @@ export class HomeComponent implements OnInit {
 	}
 
 	public refinePoemList(inputPoemListRaw: string[]): number[][] {
-		let inputPoemList: string[] = [];
-		inputPoemList = inputPoemListRaw.reduce(function (filtered: any[], currentElement: string) {
-			if (currentElement.slice(-4) === '.xml') {
-					currentElement = currentElement.slice(0, -4);
-					filtered.push(currentElement);
-				}
-				return filtered
-		}, []);
-		const inputPoemListInt = inputPoemList.map(poemCode => (poemCode.split('-')).map(coord => parseInt(coord)));
-	return inputPoemListInt
+		let inputPoemList: number[][] = [];
+		inputPoemListRaw.forEach((poemStr: string) => {
+			if (poemStr.slice(-4) === '.xml') {
+				const poem: number[] = poemStr.slice(0, -4).split('-').map((poemCoord: string) => parseInt(poemCoord));
+				inputPoemList.push(poem);
+			}
+		});
+	return inputPoemList
 	}
 
 	backToMain() {
