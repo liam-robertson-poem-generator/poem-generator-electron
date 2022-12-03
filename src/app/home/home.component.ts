@@ -186,7 +186,7 @@ export class HomeComponent implements OnInit {
 
 	public adjustForEndOfList(currentPoem: number[], currentAxisNum: number, maxValueDict: {0: number, 1: number, 2: number}) {
 		const finalNumInList: number = maxValueDict[currentAxisNum]
-		if (currentPoem[currentAxisNum] == finalNumInList) {
+		if (currentPoem[currentAxisNum] >= finalNumInList) {
 			currentPoem[currentAxisNum] = 1
 		} else {
 			currentPoem[currentAxisNum]++
