@@ -68,6 +68,7 @@ export class HomeComponent implements OnInit {
 			this.poemListPath = resolve(__dirname, "./assets/syllabary-poems")
 			this.templatePath = resolve(__dirname, "./assets/poetry-template.docx")
 		}
+		this.poemListRaw = await this.electronService.getDirectory(this.poemListPath)
 		this.poemList = this.refinePoemList(this.poemListRaw)
 		this.poemListLength = this.poemList.length
 
