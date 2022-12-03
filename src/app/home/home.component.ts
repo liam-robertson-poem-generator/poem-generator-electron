@@ -24,9 +24,10 @@ export class HomeComponent implements OnInit {
 		- e.g. release/angular-electron 10.1.0.exe
 	*******************/
 
+	// ENVIRONMENT MODE
 	/*******************
-	ENVIRONMENT MODE
 	- options: dev or prod
+	- change to prod before building
 	*******************/
 	environment: string = 'dev'
 
@@ -94,8 +95,17 @@ export class HomeComponent implements OnInit {
 		this.poemOrder = this.poemFormGroup.value.poemOrderControl
 
 		this.finalPoemList = this.iterateBySyllables(this.poemListSorted, this.startingPoem, this.numOfPoems, this.poemOrder)
-		this.templateList = await this.createTemplateList(this.finalPoemList)
-		this.writeDocument(this.templateList)
+		
+		if (this.numOfPoems > 1200) {
+			const finalPoemListSplit = [this.finalPoemList.slice(0, 1200), this.finalPoemList.slice(1200)]
+			this.templateList = await this.createTemplateList(finalPoemListSplit[0])
+			this.writeDocument(this.templateList, 1)
+			this.templateList = await this.createTemplateList(finalPoemListSplit[1])
+			this.writeDocument(this.templateList, 2)
+		} else {
+			this.templateList = await this.createTemplateList(this.finalPoemList)
+			this.writeDocument(this.templateList)
+		}
 		await this.sleep(1500);
 
 		this.writingDocBool = false;
@@ -238,11 +248,12 @@ export class HomeComponent implements OnInit {
 				hasText: hasTextVar
 			}
 			
-			outputList.push(currentPoem)}		
+			outputList.push(currentPoem)
+		}
 		return outputList
 	}
 
-	public writeDocument(outputList: any[]) {
+	public writeDocument(outputList: any[], iteration: number = 0) {
 		const docContentList: Paragraph[] = [];
 		for (let index = 0; index < outputList.length; index++) { 
 			const poemGlyph = outputList[index]["glyph"]			
@@ -314,9 +325,21 @@ export class HomeComponent implements OnInit {
 			}]
 		});
 
+		let partTitle;
+		switch (iteration) {
+			case 0:
+				partTitle = "";
+				break;
+			case 1:
+				partTitle = "_part1";
+				break;
+			case 2:
+			   partTitle = "_part2";
+				break;
+		  }
+
 		Packer.toBuffer(doc).then(async (buffer) => {
-			// this.outputPath = join(resolve(__dirname, "../../../../../../../generated-poems_" + this.startingPoemRaw + "_" + this.numOfPoems + "_" + this.poemOrder + ".docx"))
-			this.outputPath = join(resolve(__dirname, "../../../../../../generated-poems_" + this.startingPoemRaw + "_" + this.numOfPoems + "_" + this.poemOrder + ".docx"))
+			this.outputPath = join(resolve(__dirname, "../../../../../../generated-poems_" + this.startingPoemRaw + "_" + this.numOfPoems + "_" + this.poemOrder + partTitle + ".docx"))
 			await this.electronService.writeFile(this.outputPath, buffer)
 		});	
 	}
