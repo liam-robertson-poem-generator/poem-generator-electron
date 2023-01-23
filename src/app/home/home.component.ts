@@ -29,7 +29,7 @@ export class HomeComponent implements OnInit {
 	- options: dev or prod
 	- change to prod before building
 	*******************/
-	environment: string = 'dev'
+	environment: string = 'prod'
 
 	writingDocBool: boolean = false;
 	formBool = true;
