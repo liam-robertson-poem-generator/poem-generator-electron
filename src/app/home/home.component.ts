@@ -277,7 +277,7 @@ export class HomeComponent implements OnInit {
 			});	
 
 			let currentTitle: Paragraph;
-			if (outputList[index]["title"] == "") {
+			if (outputList[index]["title"].trim().length === 0) {
 				currentTitle = 
 					new Paragraph({
 						children: [ 
