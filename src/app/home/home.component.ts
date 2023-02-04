@@ -26,10 +26,11 @@ export class HomeComponent implements OnInit {
 
 	// ENVIRONMENT MODE
 	/*******************
+	environment variable is below
 	- options: dev or prod
 	- change to prod before building
 	*******************/
-	environment: string = 'prod'
+	environment: string = 'dev'
 
 	writingDocBool: boolean = false;
 	formBool = true;
@@ -255,7 +256,7 @@ export class HomeComponent implements OnInit {
 
 	public writeDocument(outputList: any[], iteration: number = 0) {
 		const docContentList: Paragraph[] = [];
-		for (let index = 0; index < outputList.length; index++) { 
+		for (let index = 0; index < outputList.length; index++) {
 			const poemGlyph = outputList[index]["glyph"]			
 			const poemImage: ImageRun = new ImageRun({
 				data: poemGlyph,
