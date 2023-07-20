@@ -255,8 +255,18 @@ export class HomeComponent implements OnInit {
 	}
 
 	public writeDocument(outputList: any[], iteration: number = 0) {
+		const glyphRepositionList: String[] = [
+			"1-1-11", "9-8-3", "11-6-11", "11-6-12", "20-2-7", "4-3-11", "11-1-1", "3-3-9", "11-4-10", "11-5-12", "17-3-2", "2-1-11", "3-2-11", "2-9-12",
+			"19-7-18", "11-8-12", "4-4-1", "14-1-4", "17-3-9", "3-9-12", "11-7-9", "11-7-12", "1-7-11", "11-1-5", "16-8-9", "2-4-12", "11-9-11", "11-10-11",
+			"4-9-18", "11-4-17", "2-8-10", "1-5-9", "4-7-7", "11-3-11", "11-4-11", "11-5-9", "13-1-17", "8-1-12", "8-3-15", "3-5-9", "11-5-5", "11-4-9", "11-6-9",
+			"16-6-11", "9-5-14", "4-8-1", "2-8-11", "17-4-12", "17-5-11", "11-7-17", "4-5-3", "6-3-12"
+		]
 		const docContentList: Paragraph[] = [];
 		for (let index = 0; index < outputList.length; index++) {
+			let verticalOffset: number = 2014400;
+			if (glyphRepositionList.includes(outputList[index]["code"])) {
+				verticalOffset = 1000000
+			}
 			const poemGlyph = outputList[index]["glyph"]			
 			const poemImage: ImageRun = new ImageRun({
 				data: poemGlyph,
@@ -271,7 +281,7 @@ export class HomeComponent implements OnInit {
 					},
 					verticalPosition: {
 						relative: VerticalPositionRelativeFrom.PARAGRAPH,
-						offset: 2014400,
+						offset: verticalOffset,
 					},
 				},
 			});	
