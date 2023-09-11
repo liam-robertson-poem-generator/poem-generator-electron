@@ -17,11 +17,13 @@ environment variable is below
 
 Converting SVG to PNG
 *******************
-The Syllabary runs on SVG
-docx library requires PNG or JPG 
-You need to convert SVG from the Syllabary to PNG
-I did this using Inkscape
-I wrote a bat file script to automate this conversion
-It's in scripts -> convert_svg_to_png.bat
+The Syllabary runs on SVG or SWF
+Poem Generator requires PNG or JPG 
+You need to convert SVG or SWF to PNG
+You can convert SVG to PNG using Inkscape
+You can convert SWF to PNG using SWFRenderer
+I wrote bat files in the scripts folder to handle this
+    - convert_svg_to_png.bat
+    - convert_swf_to_png.bat
 Put this script in the same folder as your SVG files and run it
 *******************

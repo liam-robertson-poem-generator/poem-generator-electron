@@ -16,13 +16,14 @@ export class HomeComponent implements OnInit {
 
 	// Converting SVG to PNG
 	/*******************
-	The Syllabary runs on SVG
-	docx library requires PNG or JPG 
-	You need to convert SVG from the Syllabary to PNG
-	I did this using Inkscape
-	You'll need to install Inkscape first
-	I wrote a bat file script to automate this conversion
-	It's in scripts -> convert_svg_to_png.bat
+	The Syllabary runs on SVG or SWF
+	Poem Generator requires PNG or JPG 
+	You need to convert SVG or SWF to PNG
+	You can convert SVG to PNG using Inkscape
+	You can convert SWF to PNG using SWFRenderer
+	I wrote bat files in the scripts folder to handle this
+		- convert_svg_to_png.bat
+		- convert_swf_to_png.bat
 	Put this script in the same folder as your SVG files and run it
 	*******************/
 
@@ -44,7 +45,7 @@ export class HomeComponent implements OnInit {
 	- options: dev or prod
 	- change to prod before building
 	*******************/
-	environment: string = 'prod'
+	environment: string = 'dev'
 
 	writingDocBool: boolean = false;
 	formBool = true;
@@ -278,7 +279,7 @@ export class HomeComponent implements OnInit {
 		const glyphRepositionList: String[] = []
 		const docContentList: Paragraph[] = [];
 		for (let index = 0; index < outputList.length; index++) {
-			let verticalOffset: number = 2014400;
+			let verticalOffset: number = 500000;
 			if (glyphRepositionList.includes(outputList[index]["code"])) {
 				verticalOffset = 1000000
 			}
