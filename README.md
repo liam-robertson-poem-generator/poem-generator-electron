@@ -14,3 +14,14 @@ environment variable is below
 - options: dev or prod
 - change to prod before building
 *******************
+
+Converting SVG to PNG
+*******************
+The Syllabary runs on SVG
+docx library requires PNG or JPG 
+You need to convert SVG from the Syllabary to PNG
+I did this using Inkscape
+I wrote a bat file script to automate this conversion
+It's in scripts -> convert_svg_to_png.bat
+Put this script in the same folder as your SVG files and run it
+*******************

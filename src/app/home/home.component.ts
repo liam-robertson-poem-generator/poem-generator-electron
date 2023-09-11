@@ -14,10 +14,24 @@ import { AlignmentType, Document, HorizontalPositionAlign, ImageRun, Packer, Par
 })
 export class HomeComponent implements OnInit {
 
+	// Converting SVG to PNG
+	/*******************
+	The Syllabary runs on SVG
+	docx library requires PNG or JPG 
+	You need to convert SVG from the Syllabary to PNG
+	I did this using Inkscape
+	You'll need to install Inkscape first
+	I wrote a bat file script to automate this conversion
+	It's in scripts -> convert_svg_to_png.bat
+	Put this script in the same folder as your SVG files and run it
+	*******************/
+
 	// INSTRUCTIONS 
 	/*******************
 	- run in the electron app, the browser window won't work 
 	- app will refresh when changes are made
+	- Run with this command: 
+		npm run start
 	- build with this command:
 		npm run electron:build
 	- Builds are stored in release folder
@@ -216,15 +230,15 @@ export class HomeComponent implements OnInit {
 		for (let index = 0; index < poemList.length; index++) {	
 			let hasTextVar = true;
 			const currentPoemName = poemList[index] + '.xml'
-			const currentGlyphName = poemList[index] + '.jpg'
+			const currentGlyphName = poemList[index] + '.png'
 			let poemPath: string | null = null;
 			let glyphPath: string | null = null;
 			if (this.environment == "dev") {
 				poemPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-poems"), currentPoemName);		
-				glyphPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-glyphs-jpg"), currentGlyphName); 
+				glyphPath = join(resolve(__dirname, "../../../../../../src/assets/syllabary-glyphs"), currentGlyphName); 
 			} else if (this.environment == "prod") {
 				poemPath = join(resolve(__dirname, "./assets/syllabary-poems"), currentPoemName);		
-				glyphPath = join(resolve(__dirname, "./assets/syllabary-glyphs-jpg"), currentGlyphName); 
+				glyphPath = join(resolve(__dirname, "./assets/syllabary-glyphs"), currentGlyphName); 
 			}
 			const poemGlyph = await this.electronService.readFile(glyphPath, {})	
 			const poemContent = await this.electronService.readFile(poemPath, {encoding:'utf8', flag:'r'})		
@@ -255,12 +269,13 @@ export class HomeComponent implements OnInit {
 	}
 
 	public writeDocument(outputList: any[], iteration: number = 0) {
-		const glyphRepositionList: String[] = [
-			"1-1-11", "9-8-3", "11-6-11", "11-6-12", "20-2-7", "4-3-11", "11-1-1", "3-3-9", "11-4-10", "11-5-12", "17-3-2", "2-1-11", "3-2-11", "2-9-12",
-			"19-7-18", "11-8-12", "4-4-1", "14-1-4", "17-3-9", "3-9-12", "11-7-9", "11-7-12", "1-7-11", "11-1-5", "16-8-9", "2-4-12", "11-9-11", "11-10-11",
-			"4-9-18", "11-4-17", "2-8-10", "1-5-9", "4-7-7", "11-3-11", "11-4-11", "11-5-9", "13-1-17", "8-1-12", "8-3-15", "3-5-9", "11-5-5", "11-4-9", "11-6-9",
-			"16-6-11", "9-5-14", "4-8-1", "2-8-11", "17-4-12", "17-5-11", "11-7-17", "4-5-3", "6-3-12"
-		]
+		// const glyphRepositionList: String[] = [
+		// 	"1-1-11", "9-8-3", "11-6-11", "11-6-12", "20-2-7", "4-3-11", "11-1-1", "3-3-9", "11-4-10", "11-5-12", "17-3-2", "2-1-11", "3-2-11", "2-9-12",
+		// 	"19-7-18", "11-8-12", "4-4-1", "14-1-4", "17-3-9", "3-9-12", "11-7-9", "11-7-12", "1-7-11", "11-1-5", "16-8-9", "2-4-12", "11-9-11", "11-10-11",
+		// 	"4-9-18", "11-4-17", "2-8-10", "1-5-9", "4-7-7", "11-3-11", "11-4-11", "11-5-9", "13-1-17", "8-1-12", "8-3-15", "3-5-9", "11-5-5", "11-4-9", "11-6-9",
+		// 	"16-6-11", "9-5-14", "4-8-1", "2-8-11", "17-4-12", "17-5-11", "11-7-17", "4-5-3", "6-3-12"
+		// ]
+		const glyphRepositionList: String[] = []
 		const docContentList: Paragraph[] = [];
 		for (let index = 0; index < outputList.length; index++) {
 			let verticalOffset: number = 2014400;
