@@ -45,7 +45,7 @@ export class HomeComponent implements OnInit {
 	- options: dev or prod
 	- change to prod before building
 	*******************/
-	environment: string = 'dev'
+	environment: string = 'prod'
 
 	writingDocBool: boolean = false;
 	formBool = true;
@@ -277,18 +277,23 @@ export class HomeComponent implements OnInit {
 		// 	"16-6-11", "9-5-14", "4-8-1", "2-8-11", "17-4-12", "17-5-11", "11-7-17", "4-5-3", "6-3-12"
 		// ]
 		const glyphRepositionList: String[] = []
+		const glyphShrinkList: String[] = ["11-4-10", "11-4-17", "11-5-12", "14-1-4", "19-7-18", "11-7-17", "2-8-11"]
 		const docContentList: Paragraph[] = [];
 		for (let index = 0; index < outputList.length; index++) {
 			let verticalOffset: number = 500000;
+			let widthHeight: number = 215;
 			if (glyphRepositionList.includes(outputList[index]["code"])) {
 				verticalOffset = 1000000
+			}
+			if (glyphShrinkList.includes(outputList[index]["code"])) {
+				widthHeight = 150
 			}
 			const poemGlyph = outputList[index]["glyph"]			
 			const poemImage: ImageRun = new ImageRun({
 				data: poemGlyph,
 				transformation: {
-					width: 215,
-					height: 215,
+					width: widthHeight,
+					height: widthHeight,
 				},
 				floating: {
 					horizontalPosition: {
