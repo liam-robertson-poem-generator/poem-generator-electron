@@ -276,17 +276,17 @@ export class HomeComponent implements OnInit {
 		// 	"4-9-18", "11-4-17", "2-8-10", "1-5-9", "4-7-7", "11-3-11", "11-4-11", "11-5-9", "13-1-17", "8-1-12", "8-3-15", "3-5-9", "11-5-5", "11-4-9", "11-6-9",
 		// 	"16-6-11", "9-5-14", "4-8-1", "2-8-11", "17-4-12", "17-5-11", "11-7-17", "4-5-3", "6-3-12"
 		// ]
-		const glyphRepositionList: String[] = []
+		const glyphRepositionList: String[] = ["11-4-10", "11-4-17", "11-5-12", "14-1-4", "19-7-18", "11-7-17", "2-8-11"]
 		const glyphShrinkList: String[] = ["11-4-10", "11-4-17", "11-5-12", "14-1-4", "19-7-18", "11-7-17", "2-8-11"]
 		const docContentList: Paragraph[] = [];
 		for (let index = 0; index < outputList.length; index++) {
 			let verticalOffset: number = 500000;
 			let widthHeight: number = 215;
 			if (glyphRepositionList.includes(outputList[index]["code"])) {
-				verticalOffset = 1000000
+				verticalOffset = 100000
 			}
 			if (glyphShrinkList.includes(outputList[index]["code"])) {
-				widthHeight = 150
+				widthHeight = 100
 			}
 			const poemGlyph = outputList[index]["glyph"]			
 			const poemImage: ImageRun = new ImageRun({
